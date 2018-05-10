@@ -16,10 +16,11 @@
   },
   "dependencies": {
     "body-parser": "^1.18.2",
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "nodemon": "^1.17.4"
   },
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "npm run build && node ./dist/server.js"
+    "start": "npm run build && nodemon ./dist/server.js"
   }
 }
