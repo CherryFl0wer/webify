@@ -3,7 +3,10 @@
     "server.ts"
   ],
   "include": [
-    "controllers/*.ts"
+    "controllers/*.ts",
+    "config/*.ts",
+    "helpers/*.ts",
+    "models/*.ts"
   ],
   "compilerOptions": {
     "module": "commonjs",
@@ -15,6 +18,8 @@
     "baseUrl": ".",
     "moduleResolution": "node",
     "removeComments": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "typeRoots": [ "node_modules/@types" ],
     "paths": {
       "*": [
