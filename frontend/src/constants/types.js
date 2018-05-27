@@ -1,1 +1,2 @@
-export const ToggleMenuAction = 'ToggleMenu'
+export const AddingPlaylistAction = 'AddingPlaylist';
+export const SpotifyLogginAction = 'SpotifyLoggin';

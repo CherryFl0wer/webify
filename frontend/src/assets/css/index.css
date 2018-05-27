@@ -1,12 +1,28 @@
-/*!
- * Copyright 2013-2017 Start Bootstrap
- * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-simple-sidebar/blob/master/LICENSE)
- */
-
  body {
     overflow-x: hidden;
   }
-  
+
+  .animated-page-wrapper {
+    position: absolute;
+    top: 62px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+  .center-box {
+    position: fixed;
+    top:50%;
+    left:50%;
+
+    transform: translate(-50%, -50%);
+  }
+
+
+  #login {
+    min-width:400px;
+  }
+
   #wrapper {
     padding-left: 0;
     -webkit-transition: all 0.5s ease;
@@ -118,4 +134,74 @@
       position: relative;
       margin-right: 0;
     }
+  }
+
+
+  #player {
+    display:block;
+    padding:30px;
+    position: fixed;
+    bottom: 0;
+    /*left: 50%;
+    transform: translateX(-50%);*/
+    right:0;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-top-left-radius: 5px;
+   /* border-top-right-radius: 5px;*/
+    width: 50%;
+    height: 80px;
+  }
+
+  #player .flex {
+    display: -webkit-inline-flex;
+    -webkit-flex-direction: row;
+
+    display: inline-flex;
+    flex-direction: row;
+  }
+
+  #player .flex > span {
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+    width: 30px;
+
+    -webkit-transition: width 0.7s ease-out;
+     transition: width 0.7s ease-out;
+  }
+
+  #player .action {
+    text-align: center;
+    position: relative;
+    top: 3px;
+  }
+
+  #player .action > span {
+    position: relative;
+    top: 3px;
+  }
+
+  #player .timer {
+    width: 100%;
+    vertical-align: center;
+  }
+
+  #player .counter {
+    position: relative;
+    top:6px;
+  }
+
+  .add-playlist {
+    cursor:pointer;
+    color:white;
+    text-align: center;
+  }
+
+  .add-playlist > span {
+    position: relative;
+    left:-10%;
+  }
+
+  .input-playlist input {
+    width:80%;
+    margin: 0 0 0 1rem;
   }

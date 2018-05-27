@@ -1,9 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button } from 'reactstrap';
+import { Button, Table } from 'reactstrap';
 
-import { toggleMenu } from '../actions/app';
+import { Route, Switch, withRouter, BrowserRouter as Router } from "react-router-dom";
 
+import ListOf from '../components/listof';
+import Player from '../components/player';
 import '../assets/css/index.css';
 
 
@@ -11,7 +13,13 @@ const Body = (props) => {
     return (
         <div id={"page-content-wrapper"}>
             <div className={"container-fluid"}>
-                <Button onClick={props.toggleMenu} color="primary" size="lg" block>{(props.app.menu_visible) ? "Closed" : "Open"}</Button>
+
+                <Router>
+                    <Switch>
+                        <Route path="/" component={ListOf} />
+                    </Switch>
+                </Router>
+                <Player />
             </div>
         </div>
     );
@@ -21,12 +29,6 @@ const mapStateToProps = (state, ownProps) => ({
     app: state.app
 });
 
-const mapDispatchToProps = dispatch => {
-    return {
-        toggleMenu: () => {
-            dispatch(toggleMenu())
-        }
-    }
-}
 
-export default connect(mapStateToProps, mapDispatchToProps)(Body);
+
+export default connect(mapStateToProps)(Body);

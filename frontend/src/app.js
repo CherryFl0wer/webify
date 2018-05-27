@@ -3,17 +3,35 @@ import { hot } from 'react-hot-loader';
 
 import { connect } from 'react-redux';
 
+
 import Body from './containers/body';
 import Menu from './containers/menu';
+import Login from './containers/login';
 
-let submenu = ["Contact", "Test"]
-const App = ({ app }) => {
-    return (
-        <div id="wrapper" className={ (app.menu_visible)  ? "toggled" : ""}>
-            <Menu title="Webify" elements={submenu} />
-            <Body />
-        </div>
-    )
+import './assets/css/main.css'
+
+const libs = ["Songs", "Listened recently", "Youtube"];
+const playlists = ["Playlist 1", "Playlist 2", "Playlist 3"];
+
+class App extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        if (this.props.app.is_connected) {
+            return (
+                <div id="wrapper" className={"toggled"}>
+                    <Menu title="Webify" libs={libs} playlists={playlists} />
+                    <Body />
+                </div>
+            );
+        } else {
+            return (
+                <Login />
+            )
+        }
+    }
 }
 
 
