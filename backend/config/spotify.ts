@@ -6,7 +6,7 @@ export module SpotifyConfig {
     const apiSpotify = "https://api.spotify.com"
     const clientID = "1ba80100e92d4d49870b7e4fc4931720"
     const clientSecret = "3da3164990b4482dbdeb3bc941a07466"
-    const redirectURI = "http://localhost:3000/redirect" 
+    const redirectURI = "http://localhost:8080/spotify-login" 
 
     export let spotifyStateKey = "spotify_auth_state"
 
@@ -31,21 +31,19 @@ export module SpotifyConfig {
 
     /**
      * Send request to connect at the spotify api
-     * @param  {Response} res Response object
      * @param  {string} scope keywords allowing access to certain data
      * @param  {string} state state of the current connexion
-     * @return {void}
+     * @return {string}
      */
-    export function connexion (res : Response, scope : string, state : string) : void 
+    export function connexion (scope : string, state : string) : string 
     {
-        res.redirect('https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-          response_type: 'code',
-          client_id: clientID,
-          scope: scope,
-          redirect_uri: redirectURI,
-          state: state
-        }));
+        return querystring.stringify({
+            response_type: 'code',
+            client_id: clientID,
+            scope: scope,
+            redirect_uri: redirectURI,
+            state: state
+        });
     }
 
      /**

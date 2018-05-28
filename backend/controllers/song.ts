@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import { Song, ISong } from '../models/Song';
 
-
-export module Song {}
+class SongController {
+    constructor() {
+    }
+}

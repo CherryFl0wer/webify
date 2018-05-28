@@ -1,42 +1,68 @@
-import { prop, Typegoose, ModelType, InstanceType, Ref, arrayProp } from 'typegoose';
-import { User } from './User'
-/*
-*  @additional : 
-*/
+import * as mongoose from "mongoose";
+import { IUser } from "./User";
 
 export enum SongType {
     SPOTIFY = 'spotify',
-    UPLOAD  = 'upload',
-    LINK    = 'link'
+    UPLOAD = 'upload',
+    LINK = 'link'
 }
 
-export class Song extends Typegoose {
-
-    @prop({ required: true })
-    name  : string;
-
-    @arrayProp({ items: String })
-    available_markets? : string[];
-
-    @prop()
-    image_cover? : string;
-
-    @arrayProp({ items: String, required: true })
-    artist : string[];
-
-    @prop()
-    album? : string;
-
-    @prop({ enum: SongType, required: true, default: SongType.LINK }) 
-    type : SongType;
-
-    @prop({ required: true, min: 0 })
-    duration_ms : number;
-
-    @prop()
-    uri? : string; 
-
-    @prop({ ref: User, required: true, default: null })
-    user? : Ref<User>;
-
+export interface ISong extends mongoose.Document {
+    name: string;
+    available_markets: string[];
+    image_cover?: string;
+    artists: string[];
+    album?: string;
+    type: SongType;
+    duration_ms: number;
+    uri?: string;
+    user: IUser;
 }
+
+export interface ISongModel extends mongoose.Model<ISong> {
+    // Personnal methods
+}
+
+let schema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+
+    available_markets: {
+        type: [String],
+        default: ["FR", "UK", "DE", "ES", "US"]
+    },
+
+    image_cover: {
+        type: String
+    },
+
+    artists: {
+        type: [String],
+        required: true
+    },
+
+    type: {
+        type: String,
+        enum: [SongType.LINK, SongType.SPOTIFY, SongType.UPLOAD],
+        required: true
+    },
+
+    duration_ms: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+
+    uri: {
+        type: String,
+    },
+
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+})
+
+export let Song = mongoose.model<ISong>("User", schema) as ISongModel;

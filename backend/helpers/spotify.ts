@@ -10,13 +10,13 @@ export module HelperSpotify
   export function spotify_login(req: Request, res: Response) 
   {
     let state = SpotifyConfig.giveState(16);
-    res.cookie(SpotifyConfig.spotifyStateKey, state);
+    res.cookie(SpotifyConfig.spotifyStateKey, state,  { maxAge: 900000, httpOnly: true });
     
     let scope = "user-read-private user-read-email";
 
-    SpotifyConfig.connexion(res, scope, state);
+    const result = SpotifyConfig.connexion(scope, state);
+    return res.json(result);
   }
-
 
 
   export function spotify_redirect(req : Request, res: Response) 
@@ -24,13 +24,13 @@ export module HelperSpotify
     let code = req.query.code || null;
     let state = req.query.state || null;
     let storedState = req.cookies ? req.cookies[SpotifyConfig.spotifyStateKey] : null;
-  
-    if (state === null || state !== storedState) 
+
+    // State checking is not managed because cookie are not on the same domain localhost:3000 and
+    // localhost:8080 therefore cookie does not exist on the request coming from the client 
+
+    if (state === null) // || state !== storedState  
     {
-      res.redirect('/#' +
-        querystring.stringify({
-          error: 'state_mismatch'
-        }));
+      return res.json({ error: "State undefined or different"})
     } 
     else 
     {
@@ -54,18 +54,17 @@ export module HelperSpotify
   
           // use the access token to access the Spotify Web API
           requesting.get(options, function(error, response, body) {
+            // Create USER DB
             return res.json({
-              "data": body
+              "data": body,
+              "access_token": access_token
             })
           });
   
         } 
         else 
         {
-          res.redirect('/#' +
-            querystring.stringify({
-              error: 'invalid_token'
-            }));
+          return res.json({ error: "Unvalidate token" })
         }
       });
     }

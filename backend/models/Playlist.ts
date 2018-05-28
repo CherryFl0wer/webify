@@ -1,17 +1,32 @@
-import { prop, Typegoose, ModelType, InstanceType, Ref, arrayProp} from 'typegoose';
-import { User } from './User'
-import { Song } from './Song'
-/*
-*  @additional : 
-*/
-export class Playlist extends Typegoose {
+import * as mongoose from "mongoose";
+import { ISong } from "./Song";
+import { IUser } from "./User";
 
-    @prop()
+export interface IPlaylist extends mongoose.Document {
     title: string;
-
-    @arrayProp({itemsRef: Song })
-    songs : Ref<Song>[];
-    
-    @prop({ required : true })
-    owner : Ref<User>;
+    songs: ISong[];
+    user: IUser;
 }
+
+export interface IPlaylistModel extends mongoose.Model<IPlaylist> {
+    // Personnal methods
+}
+
+let schema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+
+    songs: {
+        type: [mongoose.Types.ObjectId],
+        default: []
+    },
+
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+})
+
+export let Playlist = mongoose.model<IPlaylist>("Playlist", schema) as IPlaylistModel;
