@@ -9,14 +9,13 @@ export enum SongType {
 
 export interface ISong extends mongoose.Document {
     name: string;
-    available_markets: string[];
     image_cover?: string;
     artists: string[];
     album?: string;
     type: SongType;
     duration_ms: number;
     uri?: string;
-    user: IUser;
+    file_id: any;
 }
 
 export interface ISongModel extends mongoose.Model<ISong> {
@@ -29,13 +28,9 @@ let schema = new mongoose.Schema({
         required: true
     },
 
-    available_markets: {
-        type: [String],
-        default: ["FR", "UK", "DE", "ES", "US"]
-    },
-
     image_cover: {
-        type: String
+        type: String,
+        default:"default.png"
     },
 
     artists: {
@@ -57,12 +52,13 @@ let schema = new mongoose.Schema({
 
     uri: {
         type: String,
+        required:false
     },
 
-    user: {
+    file_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        required: true
     }
 })
 
-export let Song = mongoose.model<ISong>("User", schema) as ISongModel;
+export let Song = mongoose.model<ISong>("Song", schema) as ISongModel;

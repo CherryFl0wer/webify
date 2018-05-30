@@ -4,7 +4,8 @@ import * as cookieParser from 'cookie-parser';
 import { HelperSpotify } from './helpers/spotify';
 import { DBConfig } from './config/database';
 import * as mongoose from 'mongoose';
-import { UserController } from './controllers/user'
+import { UserController } from './controllers/user';
+import { SongController } from './controllers/song';
 import * as cors from 'cors';
 
 
@@ -25,11 +26,11 @@ app.use((req, res, next) => {
 
 mongoose.connect("mongodb://" + DBConfig.dbHost + ":" + DBConfig.dbPort + "/" + DBConfig.dbName);
 
-
 app.get('/spotify-login', HelperSpotify.spotify_login)
 app.get('/spotify-redirect', HelperSpotify.spotify_redirect)
 
 const User = new UserController(app);
+const Song = new SongController(app);
 
 
 app.listen(app.get('port'), () => {

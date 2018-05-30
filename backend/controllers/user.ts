@@ -54,8 +54,8 @@ export class UserController {
 
 
         this.model.findByMail(body.email, (err, user) => {
-            if (err) {
-                return res.json(JsonResponse.error2(err, 400))
+            if (err || user.is_connected) {
+                return res.json(JsonResponse.error("Mail not found", 400))
             }
 
             bcrypt.compare(body.password, user.password, (err2, same) => {
@@ -63,9 +63,16 @@ export class UserController {
                     return res.json(JsonResponse.error("Incorrect password", 400))
                 }
 
-                return res.json(JsonResponse.success(user));
+                this.model.findByIdAndUpdate(user._id, { "is_connected": true }, (err, idc) => {
+                    if (err) {
+                        return res.json(JsonResponse.error("Something went wrong :(", 500));
+                    }
+
+                    return res.json(JsonResponse.success(user));
+                })
             });
         });
 
     }
+
 }

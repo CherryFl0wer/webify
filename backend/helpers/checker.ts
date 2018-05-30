@@ -20,10 +20,9 @@ export module Checker {
     export function isSongValid(obj: any): boolean {
         let tmp = obj as ISong;
         return tmp.name != undefined &&
-            tmp.available_markets != undefined &&
             tmp.artists != undefined &&
             tmp.type != undefined &&
             tmp.duration_ms != undefined &&
-            tmp.user != undefined;
+            tmp.file_id != undefined;
     }
 }
