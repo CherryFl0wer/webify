@@ -1,4 +1,5 @@
 import * as mongoose from "mongoose";
+import { ISong } from "./Song";
 
 
 export interface ISpotifyUser extends mongoose.Document {
@@ -7,8 +8,8 @@ export interface ISpotifyUser extends mongoose.Document {
     is_premium? : boolean;
     spotify_link? : string;
     spotify_api? : string;
-    access_token?: string;
 }
+
 
 
 let spotifySchema = new mongoose.Schema({
@@ -42,11 +43,6 @@ let spotifySchema = new mongoose.Schema({
         type: Boolean,
         required : true,
         default: false
-    },
-
-    access_token : {
-        type: String,
-        default: "empty"
     }
 }, { _id : false })
 
@@ -55,11 +51,14 @@ export interface IUser extends mongoose.Document {
     password? : string;
     is_connected: boolean;
     spotify_infos?: ISpotifyUser
+    song_list: ISong[],
+    access_token?: string
 }
 
 export interface IUserModel extends mongoose.Model<IUser> {
     // Personnal methods
     findByMail(mail : string, cb : (err: any, res : IUser) => void) : void;
+    connexion(id : string, at : string, cb : (err : any, res : IUser) => void) : void;
 }
 
 
@@ -77,6 +76,11 @@ let schema = new mongoose.Schema({
 
     spotify_infos: spotifySchema,
 
+    song_list: {
+        type: [mongoose.Schema.Types.ObjectId],
+        default : []
+    },
+
     is_connected: {
         type:Boolean,
         required: true,
@@ -85,14 +89,21 @@ let schema = new mongoose.Schema({
 
     createdAt: {
         type: Date,
-        required: true,
         default: Date.now()
+    },
+
+    access_token: {
+        type:String
     }
 
 })
 
 schema.statics.findByMail = function (mail : string, cb : (err: any, res : IUser) => void) {
     return this.findOne({ "email" : mail }, cb);
+}
+
+schema.statics.connexion = function(id: string, at : string, cb : (err: any, res : IUser) => void) {
+    return this.update({ _id: id }, { is_connected: true,  access_token: at }, {}, cb);
 }
 
 

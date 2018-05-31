@@ -1,5 +1,4 @@
 import * as mongoose from "mongoose";
-import { IUser } from "./User";
 
 export enum SongType {
     SPOTIFY = 'spotify',

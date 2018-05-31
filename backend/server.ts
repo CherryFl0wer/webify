@@ -1,12 +1,14 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
+import * as mongoose from 'mongoose';
+import * as cors from 'cors';
+
 import { HelperSpotify } from './helpers/spotify';
 import { DBConfig } from './config/database';
-import * as mongoose from 'mongoose';
 import { UserController } from './controllers/user';
 import { SongController } from './controllers/song';
-import * as cors from 'cors';
+import { SongWorker } from './helpers/worker';
 
 
 const app = express();
@@ -33,9 +35,13 @@ const User = new UserController(app);
 const Song = new SongController(app);
 
 
+
+// can be clustered to increase perf
 app.listen(app.get('port'), () => {
   console.log(('App is running at http://localhost:%d'), app.get('port'));
   console.log('Press CTRL-C to stop\n');
+
+  SongWorker.initWorker();
 });
 
 module.exports = app;
