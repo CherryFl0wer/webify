@@ -17,6 +17,11 @@ import { Db } from 'mongodb';
 let ytdl = require('youtube-dl');
 
 
+interface IMetadataSpotify {
+    artists : any[];
+    name: string;
+}
+
 export class SongController {
 
     private repo: Repository<ISongModel>;
@@ -40,9 +45,11 @@ export class SongController {
      * @description : Find the first video of youtube matching keyword then download it
      */
     youtubeDownload(req: Request, res: Response, next: NextFunction) {
-        let keywords = req.query.q;
+        let keywords: string = req.query.q;
         let origin: string = req.query.origin;
+        let metadata: IMetadataSpotify = req.body;
         const originType: SongType = (origin.toLowerCase() == SongType.SPOTIFY) ? SongType.SPOTIFY : SongType.LINK;
+
 
         requester({
             url: "https://m.youtube.com/results?client=mv-google&hl=fr&gl=FR&q=" + keywords + "+audio&submit=Rechercher",
@@ -67,14 +74,15 @@ export class SongController {
                     tags: info.tags,
                     duration: total,
                     artist: info.uploader,
+                    ytname: info.title,
                     cover: "https://i.ytimg.com/vi/" + codeVideo + "/maxresdefault.jpg"
                 };
 
-                console.log("Downloading -> ", codeVideo, " ->");
+                console.log("Downloading -> ", codeVideo);
 
                 ytdl.exec(
                     urlYt,
-                    ['-x', '--audio-format', 'mp3', '-o', './musictmp/' + codeVideo + '.mp3'],
+                    ['-x', '--audio-format', 'mp3', '-o', './musictmp/music_' + codeVideo + '.mp3'],
                     {},
                     (err: any, output: any) => {
 
@@ -84,6 +92,10 @@ export class SongController {
 
                         res.locals.codeVideo = codeVideo;
                         res.locals.origin = originType;
+                        if (originType == SongType.SPOTIFY) {
+                            res.locals.info.artist = metadata.artists.map(e => e.name);
+                            res.locals.info.name = metadata.name;
+                        }
                         return next();
                     });
 
@@ -98,27 +110,30 @@ export class SongController {
         let writestream = this._gridfs.createWriteStream(
             { filename: res.locals.codeVideo }
         );
-        const pathMsc = "./musictmp/" + res.locals.codeVideo + ".mp3";
+        const pathMsc = "./musictmp/music_" + res.locals.codeVideo + ".mp3";
         fs.createReadStream(pathMsc).pipe(writestream);
-
         let t = this;
 
         fs.unlink(pathMsc, (err: any) => {
+            
             if (err) {
                 return res.json(JsonResponse.error2(err, 500));
             }
 
-            writestream.on('close', async function (file: any) {
 
+            writestream.on('close', async function (file: any) {
+                let artistList = (res.locals.info.artist instanceof Array) ? res.locals.info.artist : [res.locals.info.artist];
+                let nameSong = (res.locals.info.name != undefined) ? res.locals.info.name : res.locals.info.ytname;
                 let result = await t.repo.create({
-                    name: file.filename,
+                    name: nameSong,
                     image_cover: res.locals.info.cover,
-                    artists: [res.locals.info.artist],
+                    artists: artistList,
                     type: res.locals.origin,
                     duration_ms: res.locals.info.duration,
                     file_id: file._id
                 });
 
+                console.log(result);
                 // Add to the current user song_list -- TODO
                 return res.json(result);
             });
@@ -137,7 +152,7 @@ export class SongController {
     getListOfSpotifySongs(req: Request, res: Response, next: NextFunction) {
         let at = req.body.at;
         let totalOfTrack = 0;
-        requester("https://api.spotify.com/v1/me/tracks?limit=5&offset=0", {
+        requester("https://api.spotify.com/v1/me/tracks?limit=50&offset=0", {
             json: true,
             headers: {
                 'Authorization': 'Bearer ' + at
@@ -147,6 +162,7 @@ export class SongController {
             if (err || body.error) {
                 return res.json(JsonResponse.error("Access token expired", 403));
             }
+
             totalOfTrack = body.total;
             const elems = body.items;
 
@@ -159,10 +175,11 @@ export class SongController {
                 }
                 keyword = keyword.replace(/\s+/g, '+')
                 console.log("Enqueuing spotify:", track.track.id, " - ", keyword);
-                SongWorker.enQueue({ 
+                SongWorker.enQueue({
                     videoId: track.track.id,
                     keyword: keyword,
-                    artists: artistList 
+                    artists: artistList,
+                    name: track.track.name
                 });
             });
 

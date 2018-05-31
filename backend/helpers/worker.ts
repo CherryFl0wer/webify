@@ -10,7 +10,11 @@ export module SongWorker {
             console.log(`[${job.id}] Processing download on ${job.data.videoId}`); 
             console.log('Requesting http://localhost:3000/song/ytdl?q=' + job.data.keyword + '&origin=spotify');
             requester("http://localhost:3000/song/ytdl?q=" + job.data.keyword + "&origin=spotify", {
-                json: true
+                json: true,
+                body: {
+                    name: job.data.name,
+                    artists: job.data.artists
+                }
             }, (err: any, response: any, body: any) => {
                 if (err || body.type == 'error') {
                     return done("Error on job n°" + job.id, null);
@@ -21,7 +25,7 @@ export module SongWorker {
         });
     }
 
-    export function enQueue(data : { keyword: string, videoId: string}): void {
+    export function enQueue(data : any): void {
         const job = worker.createJob(data).save();
         // On Process ...
     }
