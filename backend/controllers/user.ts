@@ -31,9 +31,7 @@ export class UserController {
                 let hash = bcrypt.hashSync(body.password, 10); // TODO Async
                 body.password = hash;
                 const user = await this.repo.create(body);
-                if (user.err != undefined) {
-                    return res.json(user)
-                }
+            
                 return res.json(user);
 
             } else {
@@ -68,11 +66,21 @@ export class UserController {
                         return res.json(JsonResponse.error("Something went wrong :(", 500));
                     }
 
+                    user.is_connected = true;
+                    req.session.user = user;
+                    
                     return res.json(JsonResponse.success(user));
                 })
             });
         });
 
+    }
+
+
+    logout(req: Request & { session: any }, res: Response) {
+        const currentSession = req.session;
+
+        res.json(currentSession);
     }
 
 }

@@ -10,14 +10,33 @@ import { UserController } from './controllers/user';
 import { SongController } from './controllers/song';
 import { SongWorker } from './helpers/worker';
 
+import * as RedisSession from 'connect-redis';
+
 
 const app = express();
 
+const Session = require('express-session');
+
+const RedisStore = require('connect-redis')(Session);
+
+app.use(Session({
+    store: new RedisStore(/* options go here */),
+    secret: 'IOuL85f4a10lNbs',
+    resave: false,
+    saveUninitialized: true
+}));
+
+
+
 app.set('port', process.env.PORT || 3000);
+app.set('trust proxy', 1);
+
+
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'))
   .use(cookieParser());
+
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');

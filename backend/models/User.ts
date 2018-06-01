@@ -3,17 +3,35 @@ import { ISong } from "./Song";
 
 
 export interface ISpotifyUser extends mongoose.Document {
-    country : string;
-    spotify_id? : string;
-    is_premium? : boolean;
-    spotify_link? : string;
-    spotify_api? : string;
+    country: string;
+    spotify_id?: string;
+    is_premium?: boolean;
+    spotify_link?: string;
+    spotify_api?: string;
+}
+
+export interface IUser extends mongoose.Document {
+    email: string;
+    password?: string;
+    is_connected: boolean;
+    spotify_infos?: ISpotifyUser
+    song_list: ISong[],
+    access_token?: string
+}
+
+type UserResponse = (err: any, res: IUser) => void;
+
+export interface IUserModel extends mongoose.Model<IUser> {
+    // Personnal methods
+    findByMail(mail: string, cb: UserResponse): void;
+    connexion(id: string, at: string, cb: UserResponse): void;
+    pushSong(id_user: string, id_song: string, cb: UserResponse): void;
 }
 
 
 
-let spotifySchema = new mongoose.Schema({
-  country: {
+const spotifySchema = new mongoose.Schema({
+    country: {
         type: String,
         default: "FR",
         required: true,
@@ -25,7 +43,7 @@ let spotifySchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        index:true,
+        index: true,
         sparse: true
     },
 
@@ -35,31 +53,16 @@ let spotifySchema = new mongoose.Schema({
     },
 
     spotify_api: {
-        type:String,
+        type: String,
         default: ""
     },
 
     is_premium: {
         type: Boolean,
-        required : true,
+        required: true,
         default: false
     }
-}, { _id : false })
-
-export interface IUser extends mongoose.Document {
-    email : string;
-    password? : string;
-    is_connected: boolean;
-    spotify_infos?: ISpotifyUser
-    song_list: ISong[],
-    access_token?: string
-}
-
-export interface IUserModel extends mongoose.Model<IUser> {
-    // Personnal methods
-    findByMail(mail : string, cb : (err: any, res : IUser) => void) : void;
-    connexion(id : string, at : string, cb : (err : any, res : IUser) => void) : void;
-}
+}, { _id: false })
 
 
 let schema = new mongoose.Schema({
@@ -78,11 +81,11 @@ let schema = new mongoose.Schema({
 
     song_list: {
         type: [mongoose.Schema.Types.ObjectId],
-        default : []
+        default: []
     },
 
     is_connected: {
-        type:Boolean,
+        type: Boolean,
         required: true,
         default: false
     },
@@ -93,18 +96,21 @@ let schema = new mongoose.Schema({
     },
 
     access_token: {
-        type:String
+        type: String
     }
 
 })
 
-schema.statics.findByMail = function (mail : string, cb : (err: any, res : IUser) => void) {
-    return this.findOne({ "email" : mail }, cb);
+schema.statics.findByMail = function (mail: string, cb: UserResponse) {
+    return this.findOne({ "email": mail }, cb);
 }
 
-schema.statics.connexion = function(id: string, at : string, cb : (err: any, res : IUser) => void) {
-    return this.update({ _id: id }, { is_connected: true,  access_token: at }, {}, cb);
+schema.statics.connexion = function (id: string, at: string, cb: UserResponse) {
+    return this.findByIdAndUpdate({ _id: id }, { is_connected: true, access_token: at }, { new: true }, cb);
 }
 
+schema.statics.pushSong = function (id_user: string, id_song: string, cb: UserResponse) {
+    return this.findByIdAndUpdate({ _id: id_user }, { $push: { song_list: id_song } }, {}, cb);
+}
 
 export let User = mongoose.model<IUser>("User", schema) as IUserModel;

@@ -11,7 +11,7 @@ export module HelperSpotify {
 
   export function spotify_login(req: Request, res: Response) {
     let state = SpotifyConfig.giveState(16);
-    res.cookie(SpotifyConfig.spotifyStateKey, state, { maxAge: 900000, httpOnly: true });
+    res.cookie(SpotifyConfig.spotifyStateKey, state, { maxAge: 900000, httpOnly: true }); // -- TODO
 
     let scope = "user-read-private user-read-email user-library-read";
 
@@ -54,14 +54,15 @@ export module HelperSpotify {
           requesting.get(options, function (error, response, body) {
 
             User.findByMail(body.email, async (err: any, usr: IUser) => {
-            
+
               if (err) {
-                return res.json(JsonResponse.error2(err, 500));
+                return res.json(JsonResponse.error(err, 500));
               }
               console.log(access_token)
 
-              if (usr) { // If exist update status
+              if (usr) {
                 User.connexion(usr._id, access_token, (err: any, u: IUser) => {
+                  req.session.user = u;
                   return res.json(JsonResponse.success({ user: u }));
                 });
               } else {
@@ -71,13 +72,16 @@ export module HelperSpotify {
                   is_connected: true,
                   access_token: access_token,
                   spotify_infos: {
-                    country : body.country,
-                    spotify_id : body.id,
-                    is_premium : body.product == 'premium',
-                    spotify_link : body.href,
-                    spotify_api : body.href
+                    country: body.country,
+                    spotify_id: body.id,
+                    is_premium: body.product == 'premium',
+                    spotify_link: body.href,
+                    spotify_api: body.href
                   }
                 });
+
+                if (result.type != "error")
+                  req.session.user = result.message;
 
 
                 return res.json(result)

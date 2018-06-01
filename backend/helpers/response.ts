@@ -1,21 +1,19 @@
 export module JsonResponse {
-    export function error(msg: string, code: number) : any {
-        return {
-            type: "error",
-            message: msg,
-            code: code
-        }
+    export interface IResult {
+        type: string;
+        message?: any;
+        code: number;
     }
 
-    export function success(data: any) : any {
+    export function success(data: any): IResult {
         return {
             type: "success",
-            data: data,
+            message: data,
             code: 200
         }
     }
 
-    export function error2(data : any, code : number) : any {
+    export function error(data: any, code: number): IResult {
         return {
             type: "error",
             message: data,

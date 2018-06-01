@@ -1,12 +1,12 @@
 import { Request, Response, Router, NextFunction } from 'express';
 import { Song, ISong, ISongModel, SongType } from '../models/Song';
-
+import { User } from '../models/User';
 import * as mongoose from 'mongoose';
 
 import { Repository } from './repository';
 import { ArrayHelper as AH } from '../helpers/array'
 import { JsonResponse } from '../helpers/response';
-
+import { UserMiddleware } from '../middlewares/user';
 import { SongWorker } from '../helpers/worker';
 
 import * as GridFS from 'gridfs-stream';
@@ -14,11 +14,13 @@ import * as requester from 'request';
 import * as fs from 'fs';
 import { Db } from 'mongodb';
 
-let ytdl = require('youtube-dl');
+import * as multer from 'multer';
 
+let ytdl = require('youtube-dl');
+let mp3duration = require('mp3-duration');
 
 interface IMetadataSpotify {
-    artists : any[];
+    artists: any[];
     name: string;
 }
 
@@ -28,18 +30,56 @@ export class SongController {
 
     private _gridfs: GridFS.Grid;
 
+    private _upload: multer.Instance;
+
 
     constructor(router: Router) {
         this.repo = new Repository<ISongModel>(Song);
 
+        let storage = multer.diskStorage({
+            destination: function (req, file, cb) {
+                cb(null, './musictmp/')
+            },
+            filename: function (req, file, cb) {
+                if (file.mimetype != 'audio/mpeg') {
+                    cb(new Error("file is not an mp3 format"), null)
+                }
+
+                const file_name = file.originalname.toLowerCase().replace(/\s+/g, '+');
+                cb(null, "music_" + file_name)
+            }
+        })
+        this._upload = multer({
+            storage: storage
+        });
         this.youtubeDownload = this.youtubeDownload.bind(this);
         this.pushToDb = this.pushToDb.bind(this);
         this.getListOfSpotifySongs = this.getListOfSpotifySongs.bind(this);
+        this.songUpload = this.songUpload.bind(this);
 
-        router.get("/song/ytdl", this.youtubeDownload, this.pushToDb);
-        router.post("/song/spotifytracks", this.getListOfSpotifySongs);
+        router.post("/song/ytdl", UserMiddleware.is_allowed, this.youtubeDownload, this.pushToDb);
+        router.post("/song/spotifytracks", UserMiddleware.is_allowed, this.getListOfSpotifySongs);
+        router.post("/song/upload", UserMiddleware.is_allowed, this._upload.single('song'), this.songUpload, this.pushToDb);
     }
 
+
+    songUpload(req: Request, res: Response, next: NextFunction) {
+        const song = req.file;
+        mp3duration(song.path, (err: any, duration: number) => { // There is a formula to calculate but i need bitrate and channels.
+
+            res.locals.info = {
+                tags: [], // let's see
+                duration: duration * 1000,
+                artist: "", // given by user
+                cover: "", // given by user
+                name: song.originalname // new name given by user
+            };
+            res.locals.codeVideo = song.path;
+            res.locals.origin = SongType.UPLOAD;
+         
+            next();
+        });
+    }
 
     /**
      * @description : Find the first video of youtube matching keyword then download it
@@ -70,15 +110,17 @@ export class SongController {
 
                 const total = AH.arrTimeToMs(durarr);
 
+                res.locals.codeVideo = codeVideo;
+                res.locals.origin = originType;
                 res.locals.info = {
                     tags: info.tags,
                     duration: total,
                     artist: info.uploader,
-                    ytname: info.title,
+                    name: info.title,
                     cover: "https://i.ytimg.com/vi/" + codeVideo + "/maxresdefault.jpg"
                 };
 
-                console.log("Downloading -> ", codeVideo);
+                console.log("Downloading -> ", codeVideo, " waiting...");
 
                 ytdl.exec(
                     urlYt,
@@ -90,8 +132,6 @@ export class SongController {
                             return res.json(JsonResponse.error("Can't download youtube video " + codeVideo, 503));
                         }
 
-                        res.locals.codeVideo = codeVideo;
-                        res.locals.origin = originType;
                         if (originType == SongType.SPOTIFY) {
                             res.locals.info.artist = metadata.artists.map(e => e.name);
                             res.locals.info.name = metadata.name;
@@ -106,24 +146,29 @@ export class SongController {
 
     pushToDb(req: Request, res: Response, next: NextFunction) {
 
-        this._gridfs = GridFS(mongoose.connection.db, mongoose.mongo); // can't move it -- TODO
+        console.log("Done finished downloading ", res.locals.info.name);
+
+        this._gridfs = GridFS(mongoose.connection.db, mongoose.mongo);
+
         let writestream = this._gridfs.createWriteStream(
-            { filename: res.locals.codeVideo }
+            { filename: res.locals.codeVideo, metadata: res.locals.info }
         );
-        const pathMsc = "./musictmp/music_" + res.locals.codeVideo + ".mp3";
+
+        const pathMsc = (res.locals.origin == SongType.UPLOAD) ? res.locals.codeVideo : "./musictmp/music_" + res.locals.codeVideo + ".mp3";
+
         fs.createReadStream(pathMsc).pipe(writestream);
         let t = this;
 
         fs.unlink(pathMsc, (err: any) => {
-            
+
             if (err) {
-                return res.json(JsonResponse.error2(err, 500));
+                return res.json(JsonResponse.error(err, 500));
             }
 
 
             writestream.on('close', async function (file: any) {
                 let artistList = (res.locals.info.artist instanceof Array) ? res.locals.info.artist : [res.locals.info.artist];
-                let nameSong = (res.locals.info.name != undefined) ? res.locals.info.name : res.locals.info.ytname;
+                let nameSong = res.locals.info.name;
                 let result = await t.repo.create({
                     name: nameSong,
                     image_cover: res.locals.info.cover,
@@ -133,9 +178,12 @@ export class SongController {
                     file_id: file._id
                 });
 
-                console.log(result);
-                // Add to the current user song_list -- TODO
-                return res.json(result);
+                User.pushSong(req.session.user._id, result.message._id, (err, updatedUser) => {
+                    if (!err) {
+                        return res.json(result);
+                    }
+                    return res.json(JsonResponse.error(err, 500));
+                });
             });
         })
     }
