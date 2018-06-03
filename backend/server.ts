@@ -8,10 +8,11 @@ import { HelperSpotify } from './helpers/spotify';
 import { DBConfig } from './config/database';
 import { UserController } from './controllers/user';
 import { SongController } from './controllers/song';
+import { PlaylistController } from './controllers/playlist';
 import { SongWorker } from './helpers/worker';
 
 import * as RedisSession from 'connect-redis';
-import { PlaylistController } from './controllers/playlist';
+import * as GridFS from 'gridfs-stream';
 
 
 const app = express();
@@ -21,10 +22,10 @@ const Session = require('express-session');
 const RedisStore = require('connect-redis')(Session);
 
 app.use(Session({
-    store: new RedisStore(),
-    secret: 'IOuL85f4a10lNbs',
-    resave: false,
-    saveUninitialized: true
+  store: new RedisStore(),
+  secret: 'IOuL85f4a10lNbs',
+  resave: false,
+  saveUninitialized: true
 }));
 
 
@@ -48,20 +49,28 @@ app.use((req, res, next) => {
 
 mongoose.connect("mongodb://" + DBConfig.dbHost + ":" + DBConfig.dbPort + "/" + DBConfig.dbName);
 
+
 app.get('/spotify-login', HelperSpotify.spotify_login)
 app.get('/spotify-redirect', HelperSpotify.spotify_redirect)
 
-const User = new UserController(app);
-const Song = new SongController(app);
-const Playlist = new PlaylistController(app);
+mongoose.connection.once("open", () => {
 
+  let gridfs = GridFS(mongoose.connection.db, mongoose.mongo);
 
-// can be clustered to increase perf
-app.listen(app.get('port'), () => {
-  console.log(('App is running at http://localhost:%d'), app.get('port'));
-  console.log('Press CTRL-C to stop\n');
+  const User = new UserController(app);
+  const Song = new SongController(app, gridfs);
+  const Playlist = new PlaylistController(app);
+  
+  
+  // can be clustered to increase perf
+  app.listen(app.get('port'), () => {
+    console.log(('App is running at http://localhost:%d'), app.get('port'));
+    console.log('Press CTRL-C to stop\n');
+  
+    SongWorker.initWorker();
+  });
 
-  SongWorker.initWorker();
-});
+  
+})
 
 module.exports = app;

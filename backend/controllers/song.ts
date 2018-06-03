@@ -12,9 +12,12 @@ import { SongWorker } from '../helpers/worker';
 import * as GridFS from 'gridfs-stream';
 import * as requester from 'request';
 import * as fs from 'fs';
-import { Db } from 'mongodb';
+import { Db, GridFSBucket } from 'mongodb';
 
 import * as multer from 'multer';
+
+import { Types } from 'mongoose';
+import { Readable } from 'stream';
 
 let ytdl = require('youtube-dl');
 let mp3duration = require('mp3-duration');
@@ -33,8 +36,11 @@ export class SongController {
     private _upload: multer.Instance;
 
 
-    constructor(router: Router) {
+    constructor(router: Router, grid_instance: GridFS.Grid) {
         this.repo = new Repository<ISongModel>(Song);
+        this._gridfs = grid_instance;
+
+        console.log(this._gridfs);
 
         let storage = multer.diskStorage({
             destination: function (req, file, cb) {
@@ -49,24 +55,29 @@ export class SongController {
                 cb(null, "music_" + file_name)
             }
         })
+
         this._upload = multer({
             storage: storage
         });
+
         this.youtubeDownload = this.youtubeDownload.bind(this);
         this.pushToDb = this.pushToDb.bind(this);
         this.getListOfSpotifySongs = this.getListOfSpotifySongs.bind(this);
         this.songUpload = this.songUpload.bind(this);
+        this.loadSong = this.loadSong.bind(this);
 
         router.post("/song/ytdl", UserMiddleware.is_allowed, this.youtubeDownload, this.pushToDb);
         router.post("/song/spotifytracks", UserMiddleware.is_allowed, this.getListOfSpotifySongs);
         router.post("/song/upload", UserMiddleware.is_allowed, this._upload.single('song'), this.songUpload, this.pushToDb);
+
+        router.get("/song/:id", UserMiddleware.is_allowed, this.loadSong);
     }
 
 
     songUpload(req: Request, res: Response, next: NextFunction) {
         const song = req.file;
         mp3duration(song.path, (err: any, duration: number) => {
-             // There is a formula to calculate but i need bitrate and channels.
+            // There is a formula to calculate but i need bitrate and channels.
 
             res.locals.info = {
                 tags: [], // let's see
@@ -77,7 +88,7 @@ export class SongController {
             };
             res.locals.codeVideo = song.path;
             res.locals.origin = SongType.UPLOAD;
-         
+
             next();
         });
     }
@@ -149,7 +160,7 @@ export class SongController {
 
         console.log("Done finished downloading ", res.locals.info.name);
 
-        this._gridfs = GridFS(mongoose.connection.db, mongoose.mongo);
+        // TODO move
 
         let writestream = this._gridfs.createWriteStream(
             { filename: res.locals.codeVideo, metadata: res.locals.info }
@@ -236,5 +247,40 @@ export class SongController {
         });
     }
 
+
+    // Remove song
+
+
+    loadSong(req: Request, res: Response) {
+        const id = req.params.id as string;
+
+
+        res.set('content-type', 'audio/mp3');
+        res.set('accept-ranges', 'bytes');
+
+        Song.findById(id, (err, song) => {
+
+            //const objid = new Types.ObjectId(song.file_id);
+            const objid = song.file_id;
+
+            let streaming = this._gridfs.createReadStream({
+                _id: objid
+            });
+
+            streaming.on('data', (chunk) => {
+                res.write(chunk);
+            });
+
+            streaming.on('error', () => {
+                res.sendStatus(404);
+            });
+
+            streaming.on('end', () => {
+                res.end();
+            });
+        })
+
+
+    }
 
 }

@@ -9,6 +9,7 @@ import { Types } from 'mongoose';
 
 import { IPlaylist, IPlaylistModel, Playlist } from '../models/Playlist';
 
+
 export class PlaylistController {
     private repo: Repository<IPlaylistModel>;
     private model: IPlaylistModel;
@@ -22,11 +23,13 @@ export class PlaylistController {
         this.create = this.create.bind(this);
         this.display = this.display.bind(this);
         this.delete = this.delete.bind(this);
+        this.addSong = this.addSong.bind(this);
         // Routes
 
         router.post("/playlist/create", UserMiddleware.is_allowed, this.create);
         router.get("/playlist/:title", UserMiddleware.is_allowed, this.display);
         router.delete("/playlist/:title", UserMiddleware.is_allowed, this.delete);
+        router.post("/playlist/:title/add/:idsong", UserMiddleware.is_allowed, this.addSong);
     }
 
 
@@ -37,7 +40,7 @@ export class PlaylistController {
             return res.json(JsonResponse.error("Body not valid", 500));
         }
 
-        this.model.findByTitle(body.title, req.session.user._id, async  (err, playlist) => {
+        this.model.findByTitle(body.title, req.session.user._id, async (err, playlist) => {
 
             if (err) {
                 return res.json(JsonResponse.error(err, 500));
@@ -78,17 +81,32 @@ export class PlaylistController {
 
     }
 
-    delete(req : Request, res : Response) {
+    delete(req: Request, res: Response) {
         const title = req.params.title as string;
 
         this.model.findByTitleAndRemove(title, req.session.user._id, (err, playlist) => {
-            
+
             if (err) {
                 return res.json(JsonResponse.error(err, 200));
             }
 
             return res.json(JsonResponse.success("Deleted"));
         });
+    }
+
+
+    addSong(req: Request, res: Response) {
+        const title = req.params.title as string;
+        const idsong = req.params.idsong as string;
+
+        this.model.addIntoPlaylist(title, req.session.user._id, idsong, (err, playlist) => {
+            if (err || !playlist) {
+                return res.json(JsonResponse.error(err, 500));
+            }
+
+
+            return res.json(JsonResponse.success(playlist));
+        })
     }
 
 }
