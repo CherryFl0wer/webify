@@ -11,9 +11,7 @@ export module Checker {
 
     export function isPlaylistValid(obj: any): boolean {
         let tmp = obj as IPlaylist;
-        return tmp.title != undefined &&
-            tmp.songs != undefined &&
-            tmp.user != undefined;
+        return tmp.title != undefined;
     }
 
 
@@ -25,4 +23,5 @@ export module Checker {
             tmp.duration_ms != undefined &&
             tmp.file_id != undefined;
     }
+
 }

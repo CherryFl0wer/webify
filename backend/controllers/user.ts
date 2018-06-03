@@ -56,8 +56,11 @@ export class UserController {
 
 
         this.model.findByMail(body.email, (err, user) => {
-            if (err || user.is_connected) {
+            if (err) {
                 return res.json(JsonResponse.error("Mail not found", 400))
+            }
+            else if (user.is_connected) {
+                return res.json(JsonResponse.error("Already connected", 500))
             }
 
             bcrypt.compare(body.password, user.password, (err2, same) => {
@@ -82,9 +85,16 @@ export class UserController {
 
 
     logout(req: Request & { session: any }, res: Response) {
-        req.session.destroy();
 
-        res.json(JsonResponse.success("Successfull disconnect"));
+        this.model.findByIdAndUpdate(req.session.user._id, { is_connected: false }, (err, result) => {
+            if (err) {
+                return res.json(JsonResponse.error("Can't disconnect user", 500));
+            }
+
+            req.session.destroy();
+
+            return res.json(JsonResponse.success("Successfull disconnect"));
+        });
     }
 
 }

@@ -55,6 +55,15 @@ export class Repository<T extends mongoose.Model<mongoose.Document>> implements 
         }
     }
 
+    async readBy(field : string, val: any) : Promise<Answer> {
+        try {
+            let res = await this.model.findOne({ field: val });
+            return JsonResponse.success(res);
+        } catch (err) {
+            return JsonResponse.error(err, 500);
+        }
+    } 
+
 
     async remove(id: string): Promise<Answer> {
         try {

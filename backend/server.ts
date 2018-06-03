@@ -11,6 +11,7 @@ import { SongController } from './controllers/song';
 import { SongWorker } from './helpers/worker';
 
 import * as RedisSession from 'connect-redis';
+import { PlaylistController } from './controllers/playlist';
 
 
 const app = express();
@@ -52,7 +53,7 @@ app.get('/spotify-redirect', HelperSpotify.spotify_redirect)
 
 const User = new UserController(app);
 const Song = new SongController(app);
-
+const Playlist = new PlaylistController(app);
 
 
 // can be clustered to increase perf
