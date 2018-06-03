@@ -20,7 +20,7 @@ const Session = require('express-session');
 const RedisStore = require('connect-redis')(Session);
 
 app.use(Session({
-    store: new RedisStore(/* options go here */),
+    store: new RedisStore(),
     secret: 'IOuL85f4a10lNbs',
     resave: false,
     saveUninitialized: true

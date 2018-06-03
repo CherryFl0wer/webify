@@ -65,7 +65,8 @@ export class SongController {
 
     songUpload(req: Request, res: Response, next: NextFunction) {
         const song = req.file;
-        mp3duration(song.path, (err: any, duration: number) => { // There is a formula to calculate but i need bitrate and channels.
+        mp3duration(song.path, (err: any, duration: number) => {
+             // There is a formula to calculate but i need bitrate and channels.
 
             res.locals.info = {
                 tags: [], // let's see

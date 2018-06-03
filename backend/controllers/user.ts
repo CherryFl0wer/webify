@@ -3,6 +3,8 @@ import { User, IUser, IUserModel } from '../models/User';
 import { Repository } from './repository';
 import { Checker } from '../helpers/checker';
 import { JsonResponse } from '../helpers/response';
+import { UserMiddleware } from '../middlewares/user';
+
 import * as bcrypt from 'bcrypt';
 
 export class UserController {
@@ -17,10 +19,12 @@ export class UserController {
         // Binding
         this.register = this.register.bind(this);
         this.connexion = this.connexion.bind(this);
+        this.logout = this.logout.bind(this);
 
         // Routes
         router.post("/user/register", this.register);
         router.post("/user/connexion", this.connexion);
+        router.get("/user/logout", UserMiddleware.is_allowed, this.logout);
     }
 
     async register(req: Request, res: Response) {
@@ -31,7 +35,7 @@ export class UserController {
                 let hash = bcrypt.hashSync(body.password, 10); // TODO Async
                 body.password = hash;
                 const user = await this.repo.create(body);
-            
+
                 return res.json(user);
 
             } else {
@@ -68,7 +72,7 @@ export class UserController {
 
                     user.is_connected = true;
                     req.session.user = user;
-                    
+
                     return res.json(JsonResponse.success(user));
                 })
             });
@@ -78,9 +82,9 @@ export class UserController {
 
 
     logout(req: Request & { session: any }, res: Response) {
-        const currentSession = req.session;
+        req.session.destroy();
 
-        res.json(currentSession);
+        res.json(JsonResponse.success("Successfull disconnect"));
     }
 
 }
