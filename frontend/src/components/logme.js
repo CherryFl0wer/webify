@@ -12,10 +12,13 @@ import { Route, Link, withRouter } from "react-router-dom";
 
 import AnimatedWrapper from '../lib/Animated';
 
-import { spotifyLoggin } from '../actions/app';
+import { spotifyLoggin, userLoggin } from '../actions/app';
 
 import '../assets/css/index.css';
 
+
+let pwd = "";
+let email = "";
 
 const Logme = (props) => {
     return (
@@ -27,15 +30,15 @@ const Logme = (props) => {
                     <Form>
                         <FormGroup>
                             <Label for="email">Email</Label>
-                            <Input type="email" name="email" placeholder="myemail@gmail.com" />
+                            <Input type="email" name="email" placeholder="myemail@gmail.com" onChange={ (val) => email = val.target.value } />
                         </FormGroup>
                         <FormGroup>
                             <Label for="password">Password</Label>
-                            <Input type="password" name="password" />
+                            <Input type="password" name="password" onChange={ (val) => pwd = val.target.value }/>
                         </FormGroup>
                     </Form>
 
-                    <Button color="primary">Login</Button>
+                    <Button color="primary" onClick={() => props.userloggin({ password: pwd, email: email}) }>Login</Button>
                 </CardBody>
                 <CardFooter>
                     <CardText>You can also log in with <Button color="success" onClick={() => props.spotifyConnexion()}>
@@ -62,6 +65,10 @@ const mapStateToProps = (state, ownProps) => ({
 const mapDispatchToProps = (dispatch) => ({
     spotifyConnexion: () => {
         dispatch(spotifyLoggin());
+    },
+
+    userloggin : (data) => {
+        dispatch(userLoggin(data))
     }
 });
 

@@ -16,6 +16,7 @@ import { spotifyLoggin } from '../actions/app';
 import Register from '../components/register';
 import Logme from '../components/logme';
 import SpotifyHandler from '../lib/SpotifyHandler';
+import Player from '../components/player';
 
 import '../assets/css/index.css';
 
@@ -27,7 +28,6 @@ class Login extends React.Component {
     render() {
         return (
             <div>
-
 
 
                 <div className="container">
