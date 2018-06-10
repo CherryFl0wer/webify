@@ -1,17 +1,8 @@
 import fetch from 'cross-fetch';
 
-import { PlayerPlaying, PlayerPausing, PlayerSetup, AddToQueue } from '../constants/types';
+import { PlayerPlaying, PlayerPausing, PlayerSetup } from '../constants/types';
 
-export const playMusic = (id, data) => ({ type: PlayerPlaying, id: id, data: data });
+export const playMusic = (idx, q) => ({ type: PlayerPlaying, idx:idx, queue: q });
 export const pauseMusic = () => ({ type: PlayerPausing });
 export const setupAudio = (audio) => ({ type: PlayerSetup, audio: audio });
-export const addToQueue = (id) => {
-    return dispatch => {
-        return new Promise((resolve, reject) => { 
-            dispatch({ type : AddToQueue, id: id }) 
-        })
-        .then(() => {
-            dispatch(playMusic());
-        });
-    }
-}
+

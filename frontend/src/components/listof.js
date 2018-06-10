@@ -21,17 +21,28 @@ class ListOf extends React.Component {
         this.props.getAllSong(this.props.app.user.song_list);
     }
 
-    switchPlayer(fileid, data) {
+    switchPlayer(idx) {
+        const didChange = idx != this.props.player.curIdxInQueue;
 
-        console.log("->", this.props.player);
         if (this.props.player.playing) {
-            ; this.props.pauseSong();
+            if (didChange) {
+                this.props.playSong(idx, this.props.app.queueSong);
+            } else {
+                this.props.pauseSong();
+            }
         } else {
-            this.props.playSong(fileid, data);
+            this.props.playSong(idx, this.props.app.queueSong);
         }
     }
 
     render() {
+        const playOrNot = (idx) => {
+            if (this.props.player.curIdxInQueue == idx && this.props.player.playing)
+                return <FontAwesome name="pause" />
+
+            return <FontAwesome name="play" />
+        };
+
         return (
             <Table hover>
                 <thead>
@@ -47,11 +58,13 @@ class ListOf extends React.Component {
                 <tbody>
 
                     {
-                        this.props.app.user.song_list.map((item, idx) => {
-                            let time = item.duration_ms / 60;
+                        this.props.app.queueSong.map((item, idx) => {
+                            let time = item.duration_sec / 60;
                             return (
                                 <tr key={idx}>
-                                    <th scope="row" onClick={() => this.switchPlayer(item.file_id, item)}> <FontAwesome name={this.props.player.strplay} /> </th>
+                                    <th scope="row" onClick={() => this.switchPlayer(idx)}>
+                                        {playOrNot(idx)}
+                                    </th>
                                     <td>{item.name}</td>
                                     <td>{item.artists}</td>
                                     <td>{time.toString().replace('.', ':').slice(0, 4)}</td>
@@ -83,8 +96,8 @@ const mapDispatchToProps = (dispatch) => ({
         dispatch(getAllSongsOfUser(listsongs));
     },
 
-    playSong: (id, data) => {
-        dispatch(playMusic(id, data));
+    playSong: (idx, q) => {
+        dispatch(playMusic(idx, q));
     },
     pauseSong: () => {
         dispatch(pauseMusic());

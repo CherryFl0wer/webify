@@ -6,15 +6,25 @@ let identity = {
     user_data_spotify: {}, // Spotify metadata
     user_atok_spotify: null, // Spotify metada
     user: null, // user data
-    modal: false
+    modalStepOne: false,
+    modalStepTwo: false,
+    error: null,
+    queueSong: []
 }
 
 export default function app(state = identity, action) {
     let napp;
     switch (action.type) {
-        case types.ToggleModal:
+        case types.ToggleModalOne:
             napp = Object.assign({}, state, {
-                modal: !state.modal
+                modalStepOne: !state.modalStepOne
+            });
+
+            return napp;
+        case types.ToggleModalTwo:
+            napp = Object.assign({}, state, {
+                modalStepTwo: !state.modalStepTwo,
+                modalStepOne: false
             });
 
             return napp;
@@ -47,8 +57,23 @@ export default function app(state = identity, action) {
             return napp;
         case types.GetAllSongsOfUser:
             napp = Object.assign({}, state);
-            napp.user.song_list = action.data.message;
+            napp.queueSong = action.data.message;
+            napp.queueSong.forEach(item => {
+                item.duration_sec = item.duration_ms / 1024;
+            })
             return napp;
+        case types.UploadSong:
+            napp = Object.assign({}, state);
+            
+            action.data.duration_sec = action.data.duration_ms / 1024;
+            napp.queueSong.push(action.data);
+            return napp;
+        case types.UserLogginFail: 
+            napp = Object.assign({}, state);
+            napp.error = action.error;
+            return state;
+        case types.UploadSongErr: 
+            return state;
         default:
             return state;
     }

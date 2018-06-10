@@ -69,7 +69,6 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     displayPlaylistAdd: () => {
-        console.log("I'm in")
         dispatch(displayAddingPlaylist())
     }
 });

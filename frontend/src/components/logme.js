@@ -27,6 +27,8 @@ const Logme = (props) => {
 
                 <CardHeader>Connexion</CardHeader>
                 <CardBody>
+
+                    { console.log("error : ",props.app.error) }
                     <Form>
                         <FormGroup>
                             <Label for="email">Email</Label>
