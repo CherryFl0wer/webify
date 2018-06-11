@@ -58,7 +58,6 @@ export module HelperSpotify {
               if (err) {
                 return res.json(JsonResponse.error(err, 500));
               }
-              console.log(access_token)
 
               if (usr) {
                 User.connexion(usr._id, access_token, (err: any, u: IUser) => {
@@ -66,7 +65,6 @@ export module HelperSpotify {
                   return res.json(JsonResponse.success({ user: u }));
                 });
               } else {
-
                 let result = await repo.create({
                   email: body.email,
                   is_connected: true,
@@ -80,11 +78,16 @@ export module HelperSpotify {
                   }
                 });
 
-                if (result.type != "error")
-                  req.session.user = result.message;
+                if (result.type == "error")
+                  return res.status(500).json(JsonResponse.error("Can't create spotify user", 500));
 
-
-                return res.json(result)
+                req.session.user = result.message;
+                req.session.save(err => {
+                  if (!err)
+                    return res.json(result)
+                  
+                  return res.status(500).json(JsonResponse.error("Can't save session", 500));
+                });
               }
             });
           });

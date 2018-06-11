@@ -88,7 +88,7 @@ export class UserController {
         if (req.session.user) {
             return res.json(JsonResponse.success(req.session.user));
         }
-        return res.status(500);
+        return res.status(400);
     }
 
     logout(req: Request & { session: any }, res: Response) {

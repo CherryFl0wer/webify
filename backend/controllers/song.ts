@@ -291,6 +291,11 @@ export class SongController {
         });
     }
 
+    /**
+     * @description Load a list of songs 
+     * @param req 
+     * @param res 
+     */
 
     loadSongs(req: Request, res: Response) {
         const list = req.body;
@@ -337,6 +342,12 @@ export class SongController {
         });
     }
 
+
+    /**
+     * @description Delete a song 
+     * @param req 
+     * @param res 
+     */
 
     deletesong(req: Request, res: Response) {
         let id = req.params.id;

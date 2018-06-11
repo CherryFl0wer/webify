@@ -52,9 +52,6 @@ app.use((req, res, next) => {
 mongoose.connect("mongodb://" + DBConfig.dbHost + ":" + DBConfig.dbPort + "/" + DBConfig.dbName);
 
 
-app.get('/spotify-login', HelperSpotify.spotify_login)
-app.get('/spotify-redirect', HelperSpotify.spotify_redirect)
-
 
 mongoose.connection.once("open", () => {
 
@@ -65,6 +62,9 @@ mongoose.connection.once("open", () => {
   const Song = new SongController(app, bucket);
   const Playlist = new PlaylistController(app);
 
+
+  app.get('/spotify-login', HelperSpotify.spotify_login)
+  app.get('/spotify-redirect', HelperSpotify.spotify_redirect)
 
   // can be clustered to increase perf
   app.listen(app.get('port'), () => {

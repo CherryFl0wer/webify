@@ -7,6 +7,7 @@ export module UserMiddleware {
 
     export function is_allowed(req: Request, res: Response, next: NextFunction) {
         const currentSession = req.session;
+        console.log(currentSession);
         if (currentSession && currentSession.user) {
             next();
         } else {
