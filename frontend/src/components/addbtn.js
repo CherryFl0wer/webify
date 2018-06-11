@@ -92,7 +92,6 @@ const mapDispatchToProps = (dispatch) => ({
     },
 
     uploadSong: (data) => {
-        console.log(data);
 
         let form = new FormData();
         if (data.file) {
@@ -105,7 +104,13 @@ const mapDispatchToProps = (dispatch) => ({
         form.append('artists', data.artists);
         form.append('cover', data.cover);
 
-        dispatch(uploadSong(form));
+        file = null;
+        ytid = null;
+        namesong = null;
+        artists = null;
+        imagecover = null;
+            
+        dispatch(uploadSong(form, data));
     }
 });
 

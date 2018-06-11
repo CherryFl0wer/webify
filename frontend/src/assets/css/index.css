@@ -81,6 +81,12 @@
     text-indent: 20px;
     line-height: 40px;
   }
+
+  .sidebar-nav .logout {
+    text-align: center;
+    position: relative;
+    left: -10%;
+  }
   
   .sidebar-nav li a {
     display: block;

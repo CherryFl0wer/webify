@@ -8,6 +8,8 @@ import Body from './containers/body';
 import Menu from './containers/menu';
 import Login from './containers/login';
 
+import { getUserSession } from './actions/app';
+
 import './assets/css/main.css'
 
 const libs = ["Songs", "Listened recently", "Youtube"];
@@ -16,6 +18,7 @@ const playlists = ["Playlist 1", "Playlist 2", "Playlist 3"];
 class App extends React.Component {
     constructor(props) {
         super(props);
+        this.props.userSession();
     }
 
     render() {
@@ -39,4 +42,12 @@ const mapStateToProps = (state, ownProps) => ({
     app: state.app
 });
 
-export default connect(mapStateToProps)(hot(module)(App))
+const mapDispatchToProps = (dispatch) => ({
+
+    userSession: () => {
+        dispatch(getUserSession());
+    }
+});
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(hot(module)(App))

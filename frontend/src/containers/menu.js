@@ -4,10 +4,10 @@ import '../assets/css/index.css';
 
 import * as FontAwesome from 'react-fontawesome';
 import {
-    Form, FormGroup, Label, Input, FormText
+    Form, FormGroup, Label, Input, FormText, Button
 } from 'reactstrap';
 
-import { displayAddingPlaylist } from '../actions/app';
+import { displayAddingPlaylist, userLogout } from '../actions/app';
 
 const Menu = (props) => {
     const isAdding = props.app.adding_playlist ? (
@@ -30,19 +30,17 @@ const Menu = (props) => {
             <ul className="sidebar-nav">
                 <li className="sidebar-brand">
                     <a href="#">
-                        {props.title} - {props.app.user_data_spotify.id}
+                        {props.title} - {props.app.user_data_spotify.id || props.app.user.email }
                     </a>
                 </li>
 
-                <hr />
+                <li className="sidebar-brand logout">
+                    <Button color="danger" onClick={() => props.disconnect()}>Logout</Button>
+                </li>
 
-                <li> Library </li>
+                <li> <a href="#"> Library </a> </li>
 
-                {
-                    props.libs.map((d, idx) => {
-                        return (<li key={idx}> <a href="#"> {d} </a> </li>) // ex: <Link to="/songslist" /> 
-                    })
-                }
+                
 
                 <hr />
 
@@ -70,6 +68,10 @@ const mapStateToProps = (state, ownProps) => ({
 const mapDispatchToProps = (dispatch) => ({
     displayPlaylistAdd: () => {
         dispatch(displayAddingPlaylist())
+    },
+
+    disconnect: () => {
+        dispatch(userLogout());
     }
 });
 

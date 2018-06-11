@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Button, Table } from 'reactstrap';
 import FontAwesome from 'react-fontawesome';
-import { getAllSongsOfUser } from '../actions/app';
+import { getAllSongsOfUser, deleteSong } from '../actions/app';
 import { addToQueue, playMusic, pauseMusic } from '../actions/player';
 import AddBtn from './addbtn';
 import '../assets/css/index.css';
@@ -53,29 +53,32 @@ class ListOf extends React.Component {
                         <th>Duration</th>
                         <th>Added</th>
                         <th>Origin</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
 
                     {
                         this.props.app.queueSong.map((item, idx) => {
-                            let time = item.duration_sec / 60;
+                            let min = parseInt(item.duration_sec / 60);
+                            let sec = parseInt(item.duration_sec % 60);
                             return (
                                 <tr key={idx}>
                                     <th scope="row" onClick={() => this.switchPlayer(idx)}>
                                         {playOrNot(idx)}
                                     </th>
-                                    <td>{item.name}</td>
+                                    <td>{item.name.substr(0, 30)}</td>
                                     <td>{item.artists}</td>
-                                    <td>{time.toString().replace('.', ':').slice(0, 4)}</td>
+                                    <td>{min} : {sec}</td>
                                     <td>{item.added_at}</td>
                                     <td>{item.type}</td>
+                                    <td><Button color="primary" onClick={() => this.props.deleteSong(item._id, idx)}>X</Button></td>
                                 </tr>)
                         })
                     }
                     <tr>
                         <td colSpan="2"></td>
-                        <td colSpan="2" style={{ 'textAlign': 'center' }}>
+                        <td colSpan="3" style={{ 'textAlign': 'center' }}>
                             <AddBtn />
                         </td>
                         <td colSpan="2"></td>
@@ -99,8 +102,13 @@ const mapDispatchToProps = (dispatch) => ({
     playSong: (idx, q) => {
         dispatch(playMusic(idx, q));
     },
+
     pauseSong: () => {
         dispatch(pauseMusic());
+    },
+
+    deleteSong: (id, idx) => {
+        dispatch(deleteSong(id, idx))
     }
 });
 

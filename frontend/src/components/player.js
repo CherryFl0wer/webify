@@ -61,14 +61,17 @@ class Player extends React.Component {
 
             this._currentTimePercentage = timer;
 
-            if (this._currentTimePercentage < 100 || !this._audio.currentTime.ended) {
+            if (this._currentTimePercentage < 100) {
                 this._currentTimingSpan.innerHTML = min.toString() + ":" + nsec;
-            } else { // if (this._currentTimePercentage >= 100 || this._audio.currentTime.ended)
-
+            }
+            if (this._currentTimePercentage >= 100 || this._audio.currentTime.ended) {
                 this.playNextSongQueue();
             }
 
         } else {
+            if (!this._currentTimingSpan)
+                clearInterval(this.updateTimerID);
+
             this._currentTimingSpan.innerHTML = "0:00";
         }
     }
@@ -90,8 +93,7 @@ class Player extends React.Component {
     sliderChange(e) {
         let percentageSeek = e.target.value;
         if (this._audio && this.props.player.urlSong != "" && this._audio.readyState == 4) {
-            let ntime = parseInt((percentageSeek * this.props.player.metadata.duration_sec) / 100, 10);
-            this._ntime = ntime;
+            this._ntime = parseInt((percentageSeek * this.props.player.metadata.duration_sec) / 100, 10);
         }
     }
 

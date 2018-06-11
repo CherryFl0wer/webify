@@ -39,7 +39,7 @@ export default function player(state = identity, action) {
                 const data = currentSong;
 
 
-                const url = "http://localhost:3000/song/stream/" + id; // Not necessary
+                const url = "http://localhost:3000/song/stream/" + id; 
 
                 nplayer.currentaudio.src = url;
                 nplayer.prevIdx = nplayer.curIdxInQueue;
@@ -47,9 +47,10 @@ export default function player(state = identity, action) {
 
                 nplayer.metadata = data;
 
-                nplayer.metadata.duration_sec = nplayer.metadata.duration_ms / 1024;
-                nplayer.finish = (nplayer.metadata.duration_sec / 60).toString();
-                nplayer.finish = nplayer.finish.slice(0, 4).replace(".", ":");
+                nplayer.metadata.duration_sec = nplayer.metadata.duration_ms / 1000;
+                let min = parseInt(nplayer.metadata.duration_sec / 60);
+                let sec = parseInt(nplayer.metadata.duration_sec % 60);
+                nplayer.finish = min.toString() + " : " + sec.toString();
 
                 nplayer.urlSong = url;
             }

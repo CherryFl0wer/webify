@@ -3,7 +3,8 @@ import fetch from 'cross-fetch';
 import {
     UserLoggin, SpotifyLogginAction, AddingPlaylistAction, GetAllSongsOfUser,
     ToggleModalOne, ToggleModalTwo, AddToQueue, UploadSong, UserLogginFail,
-    UploadSongErr
+    UploadSongErr, UserLogout, UserLogoutFail, GetUserSession, DeleteSong,
+    DeleteSongFail
 } from '../constants/types'
 
 
@@ -46,8 +47,12 @@ export const userLoggin = (json) => {
         })
             .then(response => response.json())
             .then(res => {
+
+                console.log(res);
                 dispatch(({ type: UserLoggin, data: res }))
             }).catch(err => {
+
+                console.log(err);
                 dispatch(({ type: UserLogginFail, error: err }))
             });
     }
@@ -71,6 +76,74 @@ export const userReg = (json) => {
     }
 }
 
+export const userLogout = () => {
+    return dispatch => {
+        return fetch('http://localhost:3000/user/logout', {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                dispatch(({ type: UserLogout }));
+            })
+            .catch(err => {
+
+                dispatch(({ type: UserLogoutFail, error: err }));
+            })
+    }
+}
+
+
+export const getUserSession = () => {
+    return dispatch => {
+        return fetch('http://localhost:3000/user/session', {
+            method: "GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                console.log(res);
+                if (res.type != "error")
+                    dispatch(({ type: GetUserSession, data: res.message }))
+            })
+            .catch(err => {
+
+                console.log(err);
+                dispatch(({ type: UserLogginFail, error: err }));
+            })
+    }
+}
+
+export const deleteSong = (id, idx) => {
+    return dispatch => {
+        return fetch('http://localhost:3000/song/remove/' + id.toString(), {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                console.log(res);
+                if (res.type != "error")
+                    dispatch(({ type: DeleteSong, index: idx }))
+            })
+            .catch(err => {
+                dispatch(({ type: DeleteSongFail, error: err }));
+            })
+    }
+}
+
 // User song list 
 
 export const getAllSongsOfUser = (listsong) => {
@@ -86,37 +159,35 @@ export const getAllSongsOfUser = (listsong) => {
         })
             .then(response => response.json())
             .then(res => {
-                if (res.code == 400) 
-                {
-                    // error
-                }
                 dispatch(({ type: GetAllSongsOfUser, data: res }))
             });
     }
 }
 
-export const addToQueue = (id) => {
-   
-}
+export const uploadSong = (form, data) => {
 
-export const uploadSong = (form) => {
-    const action = (form.ytid) ? "ytdl" : "upload";
-    const req = (form.ytid) ? "?q=" + form.ytid + "&origin=link" : "";
+    const action = (data.ytid) ? "ytdl" : "upload";
+    const req = (data.ytid) ? "?q=" + data.ytid + "&origin=link" : "";
+    let headers = {
+        'Accept': 'application/json'
+    }
+
+    if (data.ytid)
+        headers["Content-Type"] = "application/json";
+
     return dispatch => {
         return fetch('http://localhost:3000/song/' + action + req, {
-            method:"POST",
-            headers: {
-                'Accept': 'application/json'
-            },
+            method: "POST",
+            headers: headers,
             credentials: 'include',
-            body: form
+            body: (data.ytid) ? JSON.stringify(data) : form
         })
-        .then(response => response.json())
-        .then(res => {
-            dispatch(({ type: UploadSong, data: res.message }));
-        }).catch(err => {
-            dispatch(({ type: UploadSongErr, error: err}))
-        })
+            .then(response => response.json())
+            .then(res => {
+                dispatch(({ type: UploadSong, data: res.message }));
+            }).catch(err => {
+                dispatch(({ type: UploadSongErr, error: err }))
+            })
     }
 }
 
