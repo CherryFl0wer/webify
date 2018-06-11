@@ -25,12 +25,15 @@ const Menu = (props) => {
             <li className="add-playlist" onClick={() => props.displayPlaylistAdd()}><FontAwesome name="plus-square" /></li>
         );
 
+    const displayID = () => {
+        return (!props.app.user.spotify_id) ? props.app.user.email : props.app.user.spotify_id;
+    }
     return (
         <div id="sidebar-wrapper">
             <ul className="sidebar-nav">
                 <li className="sidebar-brand">
                     <a href="#">
-                        {props.title} - {props.app.user_data_spotify.id || props.app.user.email }
+                        {props.title} - {displayID().substr(0, 15)}
                     </a>
                 </li>
 

@@ -26,10 +26,13 @@ export const spotifyLoggin = () => {
 
 export const spotifyConfirmLogAction = (code, state) => {
     return dispatch => {
-        return fetch('http://localhost:3000/spotify-redirect?code=' + code + "&state=" + state)
+        return fetch('http://localhost:3000/spotify-redirect?code=' + code + "&state=" + state, {
+            credentials: 'include'
+        })
             .then(response => response.json())
             .then(res => {
-                dispatch(receiveSpotifyLogginAnswer(res))
+                console.log(res);
+                dispatch(receiveSpotifyLogginAnswer(res.message))
             });
     }
 };
@@ -47,12 +50,8 @@ export const userLoggin = (json) => {
         })
             .then(response => response.json())
             .then(res => {
-
-                console.log(res);
                 dispatch(({ type: UserLoggin, data: res }))
             }).catch(err => {
-
-                console.log(err);
                 dispatch(({ type: UserLogginFail, error: err }))
             });
     }
@@ -110,13 +109,10 @@ export const getUserSession = () => {
         })
             .then(response => response.json())
             .then(res => {
-                console.log(res);
                 if (res.type != "error")
                     dispatch(({ type: GetUserSession, data: res.message }))
             })
             .catch(err => {
-
-                console.log(err);
                 dispatch(({ type: UserLogginFail, error: err }));
             })
     }

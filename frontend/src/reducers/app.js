@@ -3,7 +3,6 @@ import * as types from '../constants/types.js';
 let identity = {
     adding_playlist: false, // action
     is_connected: false, // state
-    user_data_spotify: {}, // Spotify metadata
     user_atok_spotify: null, // Spotify metada
     user: null, // user data
     modalStepOne: false,
@@ -13,6 +12,7 @@ let identity = {
 }
 
 export default function app(state = identity, action) {
+    console.log(state);
     let napp;
     switch (action.type) {
         case types.ToggleModalOne:
@@ -36,11 +36,11 @@ export default function app(state = identity, action) {
             return napp;
         case types.SpotifyLogginAction:
             const res = action.result;
-            if (res.data !== undefined) {
+            if (res != undefined) {
                 napp = Object.assign({}, state, {
                     is_connected: true,
-                    user_data_spotify: res.data,
-                    user_atok_spotify: res.access_token
+                    user: res.user,
+                    user_atok_spotify: res.user.access_token
                 });
 
                 return napp;
@@ -56,10 +56,12 @@ export default function app(state = identity, action) {
             return napp;
         case types.GetAllSongsOfUser:
             napp = Object.assign({}, state);
-            napp.queueSong = action.data.message;
-            napp.queueSong.forEach(item => {
-                item.duration_sec = item.duration_ms / 1000;
-            })
+            if (action.data.message) {
+                napp.queueSong = action.data.message;
+                napp.queueSong.forEach(item => {
+                    item.duration_sec = item.duration_ms / 1000;
+                })
+            }
             return napp;
         case types.UploadSong:
             napp = Object.assign({}, state);
