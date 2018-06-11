@@ -11,6 +11,8 @@ import { Route, Switch, withRouter, BrowserRouter as Router } from "react-router
 
 import * as FontAwesome from 'react-fontawesome';
 
+import history from '../lib/history';
+
 import { spotifyLoggin } from '../actions/app';
 
 import Register from '../components/register';
@@ -36,7 +38,7 @@ class Login extends React.Component {
                         <div className="col-md-12">
 
                             <h3><FontAwesome name='headphones' /> Webify</h3>
-                            <Router>
+                            <Router history={history}>
                                 <Switch>
                                     <Route exact path="/" component={Logme} />
                                     <Route path="/register" component={Register} />

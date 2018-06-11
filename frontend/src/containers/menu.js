@@ -51,7 +51,7 @@ const Menu = (props) => {
 
                 {
                     props.playlists.map((d, idx) => {
-                        return (<li key={idx}> <a href="#"> {d} </a> </li>) // ex: <Link to="/playlist/:username/:id" /> 
+                        return (<li key={idx}> <a href="#"> {d} </a> </li>) // ex: <Link to="/playlist/:id" /> 
                     })
                 }
 

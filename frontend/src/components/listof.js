@@ -5,6 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import { getAllSongsOfUser, deleteSong } from '../actions/app';
 import { addToQueue, playMusic, pauseMusic } from '../actions/player';
 import AddBtn from './addbtn';
+import SpotifyDlBtn from './spotifydlbtn';
 import '../assets/css/index.css';
 
 
@@ -42,6 +43,18 @@ class ListOf extends React.Component {
 
             return <FontAwesome name="play" />
         };
+
+        const displaySpotifyBtn = () => {
+            if (this.props.app.user_atok_spotify != null) {
+                return (<tr>
+                    <td colSpan="2"></td>
+                    <td colSpan="3" style={{ 'textAlign': 'center' }}>
+                        <SpotifyDlBtn />
+                    </td>
+                    <td colSpan="2"></td>
+                </tr>)
+            }
+        }
 
         return (
             <Table hover>
@@ -83,6 +96,8 @@ class ListOf extends React.Component {
                         </td>
                         <td colSpan="2"></td>
                     </tr>
+
+                    {displaySpotifyBtn()}
                 </tbody>
             </Table>
         );

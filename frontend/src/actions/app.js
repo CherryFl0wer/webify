@@ -4,7 +4,8 @@ import {
     UserLoggin, SpotifyLogginAction, AddingPlaylistAction, GetAllSongsOfUser,
     ToggleModalOne, ToggleModalTwo, AddToQueue, UploadSong, UserLogginFail,
     UploadSongErr, UserLogout, UserLogoutFail, GetUserSession, DeleteSong,
-    DeleteSongFail, UserRegister, UserRegisterFail
+    DeleteSongFail, UserRegister, UserRegisterFail,DownloadingSpotifySong,
+    DownloadingSpotifySongFail
 } from '../constants/types'
 
 
@@ -31,7 +32,6 @@ export const spotifyConfirmLogAction = (code, state) => {
         })
             .then(response => response.json())
             .then(res => {
-                console.log(res);
                 dispatch(receiveSpotifyLogginAnswer(res.message))
             });
     }
@@ -69,7 +69,6 @@ export const userReg = (json) => {
         })
             .then(response => response.json())
             .then(res => {
-                console.log(res);
                 dispatch(({ type: UserRegister, data: res }))
             }).catch(err => {
                 dispatch(({ type: UserRegisterFail, error: err }))
@@ -182,9 +181,31 @@ export const uploadSong = (form, data) => {
             .then(response => response.json())
             .then(res => {
                 dispatch(({ type: UploadSong, data: res.message }));
-            }).catch(err => {
+            })
+            .catch(err => {
                 dispatch(({ type: UploadSongErr, error: err }))
             })
+    }
+}
+
+export const dlSpotifySong = (at) => {
+    return dispatch => {
+        return fetch('http://localhost:3000/song/spotifytracks', {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ at: at })
+        })
+            .then(response => response.json())
+            .then(res => {
+                dispatch(({ type: DownloadingSpotifySong, data: res.message }));
+            })
+            .catch(err => {
+                dispatch(({ type: DownloadingSpotifySongFail, error: res.message }));
+            });
     }
 }
 

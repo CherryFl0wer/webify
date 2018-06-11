@@ -1,5 +1,7 @@
 export const AddingPlaylistAction = 'AddingPlaylist';
 export const SpotifyLogginAction = 'SpotifyLoggin';
+
+
 export const UserLoggin = "UserLoggin";
 export const UserLogginFail = "UserLogginFail";
 export const UserRegister = "UserRegister";
@@ -27,3 +29,6 @@ export const UploadSongErr = "UploadSongErr";
 
 export const DeleteSong = "DeleteSong";
 export const DeleteSongFail = "DeleteSongFail";
+
+export const DownloadingSpotifySong = "DownloadingSpotifySong";
+export const DownloadingSpotifySongFail = "DownloadingSpotifySongFail";
