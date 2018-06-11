@@ -28,7 +28,7 @@ export class UserController {
     }
 
     async register(req: Request, res: Response) {
-        let body = JSON.parse(req.body);
+        let body = req.body;
 
         if (Checker.isUserValid(body)) {
             if (body.password != undefined) {
