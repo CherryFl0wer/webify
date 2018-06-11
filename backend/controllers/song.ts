@@ -9,7 +9,6 @@ import { JsonResponse } from '../helpers/response';
 import { UserMiddleware } from '../middlewares/user';
 import { SongWorker } from '../helpers/worker';
 
-import * as GridFS from 'gridfs-stream';
 import * as requester from 'request';
 import * as fs from 'fs';
 import { Db, GridFSBucket } from 'mongodb';
@@ -31,28 +30,26 @@ export class SongController {
 
     private repo: Repository<ISongModel>;
 
-    private _gridfs: GridFS.Grid;
+    private _gridfs: GridFSBucket;
 
     private _upload: multer.Instance;
 
-
-    constructor(router: Router, grid_instance: GridFS.Grid) {
+    constructor(router: Router, grid_instance: GridFSBucket) {
         this.repo = new Repository<ISongModel>(Song);
         this._gridfs = grid_instance;
-
-        console.log(this._gridfs);
 
         let storage = multer.diskStorage({
             destination: function (req, file, cb) {
                 cb(null, './musictmp/')
             },
             filename: function (req, file, cb) {
-                if (file.mimetype != 'audio/mpeg') {
-                    cb(new Error("file is not an mp3 format"), null)
+                if (file.mimetype == 'audio/mpeg' || file.mimetype == 'audio/mp3') {
+                    const file_name = file.originalname.toLowerCase().replace(/\s+/g, '+');
+                    cb(null, "music_" + file_name);
                 }
-
-                const file_name = file.originalname.toLowerCase().replace(/\s+/g, '+');
-                cb(null, "music_" + file_name)
+                else {
+                    cb(new Error("file is not an mp3 format"), null);
+                }
             }
         })
 
@@ -65,44 +62,66 @@ export class SongController {
         this.getListOfSpotifySongs = this.getListOfSpotifySongs.bind(this);
         this.songUpload = this.songUpload.bind(this);
         this.loadSong = this.loadSong.bind(this);
+        this.streamSong = this.streamSong.bind(this);
+        this.loadSongs = this.loadSongs.bind(this);
+        this.deletesong = this.deletesong.bind(this);
 
         router.post("/song/ytdl", UserMiddleware.is_allowed, this.youtubeDownload, this.pushToDb);
         router.post("/song/spotifytracks", UserMiddleware.is_allowed, this.getListOfSpotifySongs);
-        router.post("/song/upload", UserMiddleware.is_allowed, this._upload.single('song'), this.songUpload, this.pushToDb);
-
-        router.get("/song/:id", UserMiddleware.is_allowed, this.loadSong);
+        router.post("/song/upload", UserMiddleware.is_allowed, this.songUpload, this.pushToDb);
+        router.get("/song/stream/:id", UserMiddleware.is_allowed, this.streamSong);
+        router.get('/song/:id', UserMiddleware.is_allowed, this.loadSong);
+        router.post('/song/list', UserMiddleware.is_allowed, this.loadSongs);
+        router.post('/song/remove/:id', UserMiddleware.is_allowed, this.deletesong);
     }
 
-
+    /**
+       * @description : Manual upload of song
+       * @param req 
+       * @param res 
+       * @param next 
+       */
     songUpload(req: Request, res: Response, next: NextFunction) {
-        const song = req.file;
-        mp3duration(song.path, (err: any, duration: number) => {
-            // There is a formula to calculate but i need bitrate and channels.
+        this._upload.single('song')(req, res, (err) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json(JsonResponse.error(err, 500));
+            }
 
-            res.locals.info = {
-                tags: [], // let's see
-                duration: duration * 1000,
-                artist: "", // given by user
-                cover: "", // given by user
-                name: song.originalname // new name given by user
-            };
-            res.locals.codeVideo = song.path;
-            res.locals.origin = SongType.UPLOAD;
+            const song = req.file;
+            const data = req.body;
 
-            next();
+            mp3duration(song.path, (err: any, duration: number) => {
+                // There is a formula to calculate but i need bitrate and channels.
+
+                res.locals.info = {
+                    duration: duration * 1000,
+                    artist: data.artists.split(','),
+                    cover: data.cover,
+                    name: data.name
+                };
+                res.locals.codeVideo = song.path;
+                res.locals.origin = SongType.UPLOAD;
+
+                next();
+            });
         });
     }
 
     /**
      * @description : Find the first video of youtube matching keyword then download it
+     * @param req 
+     * @param res 
+     * @param next 
      */
     youtubeDownload(req: Request, res: Response, next: NextFunction) {
-        let keywords: string = req.query.q;
-        let origin: string = req.query.origin;
-        let metadata: IMetadataSpotify = req.body;
+        const keywords: string = req.query.q;
+        const origin: string = req.query.origin;
+
         const originType: SongType = (origin.toLowerCase() == SongType.SPOTIFY) ? SongType.SPOTIFY : SongType.LINK;
+        let metadata: any = req.body;
 
-
+        console.log(req.body);
         requester({
             url: "https://m.youtube.com/results?client=mv-google&hl=fr&gl=FR&q=" + keywords + "+audio&submit=Rechercher",
             method: 'GET', gzip: true
@@ -114,6 +133,7 @@ export class SongController {
             ytdl.getInfo(urlYt, [], (err: any, info: any) => {
                 if (err) throw err;
 
+                // convert string duration to int ms
                 let durstr: string = info.duration;
                 let durarr: number[] = []
                 durstr.split(':').forEach(e => {
@@ -122,15 +142,19 @@ export class SongController {
 
                 const total = AH.arrTimeToMs(durarr);
 
+                // Data to pass to push db
                 res.locals.codeVideo = codeVideo;
                 res.locals.origin = originType;
                 res.locals.info = {
-                    tags: info.tags,
                     duration: total,
-                    artist: info.uploader,
-                    name: info.title,
-                    cover: "https://i.ytimg.com/vi/" + codeVideo + "/maxresdefault.jpg"
+                    artist: (metadata.artists) ? metadata.artists.split(',') : info.uploader,
+                    name: (metadata.name) ? metadata.name : info.title,
+                    cover: (metadata.cover) ? metadata.cover : "https://i.ytimg.com/vi/" + codeVideo + "/maxresdefault.jpg"
                 };
+
+                if (originType == SongType.SPOTIFY)
+                    res.locals.info.artist = metadata.artists.map((e: any) => e.name);
+
 
                 console.log("Downloading -> ", codeVideo, " waiting...");
 
@@ -141,13 +165,9 @@ export class SongController {
                     (err: any, output: any) => {
 
                         if (err) {
-                            return res.json(JsonResponse.error("Can't download youtube video " + codeVideo, 503));
+                            return res.status(500).json(JsonResponse.error("Can't download youtube video " + codeVideo, 500));
                         }
 
-                        if (originType == SongType.SPOTIFY) {
-                            res.locals.info.artist = metadata.artists.map(e => e.name);
-                            res.locals.info.name = metadata.name;
-                        }
                         return next();
                     });
 
@@ -156,15 +176,19 @@ export class SongController {
     }
 
 
+    /**
+     * @description Get data of musique and put them into the db
+     * @param req 
+     * @param res 
+     * @param next 
+     */
     pushToDb(req: Request, res: Response, next: NextFunction) {
 
         console.log("Done finished downloading ", res.locals.info.name);
 
-        // TODO move
-
-        let writestream = this._gridfs.createWriteStream(
-            { filename: res.locals.codeVideo, metadata: res.locals.info }
-        );
+        let writestream = this._gridfs.openUploadStream(res.locals.codeVideo, {
+            metadata: res.locals.info
+        })
 
         const pathMsc = (res.locals.origin == SongType.UPLOAD) ? res.locals.codeVideo : "./musictmp/music_" + res.locals.codeVideo + ".mp3";
 
@@ -172,29 +196,28 @@ export class SongController {
         let t = this;
 
         fs.unlink(pathMsc, (err: any) => {
-
             if (err) {
-                return res.json(JsonResponse.error(err, 500));
+                return res.status(500).json(JsonResponse.error(err, 500));
             }
 
 
-            writestream.on('close', async function (file: any) {
+            writestream.once('finish', async function () {
                 let artistList = (res.locals.info.artist instanceof Array) ? res.locals.info.artist : [res.locals.info.artist];
-                let nameSong = res.locals.info.name;
+
                 let result = await t.repo.create({
-                    name: nameSong,
+                    name: res.locals.info.name,
                     image_cover: res.locals.info.cover,
                     artists: artistList,
                     type: res.locals.origin,
                     duration_ms: res.locals.info.duration,
-                    file_id: file._id
+                    file_id: writestream.id
                 });
 
                 User.pushSong(req.session.user._id, result.message._id, (err, updatedUser) => {
                     if (!err) {
                         return res.json(result);
                     }
-                    return res.json(JsonResponse.error(err, 500));
+                    return res.status(500).json(JsonResponse.error(err, 500));
                 });
             });
         })
@@ -211,8 +234,10 @@ export class SongController {
      */
     getListOfSpotifySongs(req: Request, res: Response, next: NextFunction) {
         let at = req.body.at;
-        let totalOfTrack = 0;
-        requester("https://api.spotify.com/v1/me/tracks?limit=50&offset=0", {
+        let offset = 0;
+        let total = 0;
+        //let elems : any[] = [];
+        requester("https://api.spotify.com/v1/me/tracks?limit=50&offset=" + offset, {
             json: true,
             headers: {
                 'Authorization': 'Bearer ' + at
@@ -220,12 +245,13 @@ export class SongController {
         }, (err: any, response: any, body: any) => {
 
             if (err || body.error) {
-                return res.json(JsonResponse.error("Access token expired", 403));
+                return res.status(403).json(JsonResponse.error("Access token expired", 403));
             }
 
-            totalOfTrack = body.total;
-            const elems = body.items;
-
+            offset += 50;
+            total = body.total;
+            //elems.push(body.items);
+            let elems = body.items;
             elems.forEach((track: any) => {
                 const artistList = track.track.artists;
 
@@ -234,7 +260,9 @@ export class SongController {
                     keyword += " " + artistList[0].name;
                 }
                 keyword = keyword.replace(/\s+/g, '+')
+
                 console.log("Enqueuing spotify:", track.track.id, " - ", keyword);
+
                 SongWorker.enQueue({
                     videoId: track.track.id,
                     keyword: keyword,
@@ -248,39 +276,95 @@ export class SongController {
     }
 
 
-    // Remove song
+    /**
+     * @description load a mp3 song from database files
+     * @param req 
+     * @param res 
+     */
 
 
     loadSong(req: Request, res: Response) {
-        const id = req.params.id as string;
 
+        const id = req.params.id as string;
+        Song.findById(id, (err, song) => {
+            return res.json(JsonResponse.success(song));
+        });
+    }
+
+
+    loadSongs(req: Request, res: Response) {
+        const list = req.body;
+
+        Song.listSongByObjId(list.data, (err, songs) => {
+            return res.json(JsonResponse.success(songs));
+        });
+    }
+
+
+    /**
+     * @description Stream a song 
+     * @param req 
+     * @param res 
+     */
+
+
+    streamSong(req: Request, res: Response) {
+        const id = req.params.id as string;
 
         res.set('content-type', 'audio/mp3');
         res.set('accept-ranges', 'bytes');
 
-        Song.findById(id, (err, song) => {
+        let t = this;
 
-            //const objid = new Types.ObjectId(song.file_id);
-            const objid = song.file_id;
+        try {
+            var trackID = new mongoose.mongo.ObjectId(id);
+        } catch (err) {
+            return res.status(400).json(JsonResponse.error("Incorrect ID", 400));
+        }
 
-            let streaming = this._gridfs.createReadStream({
-                _id: objid
-            });
+        let streaming = t._gridfs.openDownloadStream(trackID);
 
-            streaming.on('data', (chunk) => {
-                res.write(chunk);
-            });
+        streaming.on('data', (chunk) => {
+            res.write(chunk);
+        });
 
-            streaming.on('error', () => {
-                res.sendStatus(404);
-            });
+        streaming.on('error', () => {
+            res.sendStatus(404);
+        });
 
-            streaming.on('end', () => {
-                res.end();
-            });
-        })
-
-
+        streaming.on('end', () => {
+            res.end();
+        });
     }
 
+
+    deletesong(req: Request, res: Response) {
+        let id = req.params.id;
+        let t = this;
+        Song.findByIdAndRemove(id, (err, song) => {
+
+            if (err) {
+                return res.status(500).json(JsonResponse.error(err, 500));
+            }
+
+            User.update({ _id: mongoose.Types.ObjectId(req.session.user._id) },
+                { $pull: { song_list: mongoose.Types.ObjectId(song._id) } },
+                (err, raw) => {
+                    if (err) {
+
+                        console.log(err);
+                        return res.status(500).json(JsonResponse.error(err, 500));
+                    }
+
+                    t._gridfs.delete(song.file_id, (err) => {
+                        if (err) {
+                            console.log(err);
+                            return res.status(500).json(JsonResponse.error(err, 500));
+                        }
+
+                        return res.json(JsonResponse.success("Song deleted"));
+                    });
+                })
+        });
+    }
 }

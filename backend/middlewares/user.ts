@@ -2,15 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
 import { JsonResponse } from '../helpers/response';
 
+
 export module UserMiddleware {
 
-    export function is_allowed(req: Request, res: Response, next: NextFunction): void {
+    export function is_allowed(req: Request, res: Response, next: NextFunction) {
         const currentSession = req.session;
-
-        if (currentSession && currentSession.user && currentSession.user.is_connected) {
+        if (currentSession && currentSession.user) {
             next();
         } else {
-            res.json(JsonResponse.error("User not connected", 400));
+            return res.status(500).json(JsonResponse.error("User not connected", 500));
         }
     }
+
 }

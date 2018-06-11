@@ -1,5 +1,5 @@
 import * as mongoose from "mongoose";
-import { ISong } from "./Song";
+import { Song, ISong } from "./Song";
 
 
 export interface ISpotifyUser extends mongoose.Document {
@@ -19,7 +19,7 @@ export interface IUser extends mongoose.Document {
     access_token?: string
 }
 
-type UserResponse = (err: any, res: IUser) => void;
+export type UserResponse = (err: any, res: IUser) => void;
 
 export interface IUserModel extends mongoose.Model<IUser> {
     // Personnal methods
@@ -102,6 +102,7 @@ let schema = new mongoose.Schema({
 })
 
 schema.statics.findByMail = function (mail: string, cb: UserResponse) {
+    
     return this.findOne({ "email": mail }, cb);
 }
 
@@ -112,5 +113,6 @@ schema.statics.connexion = function (id: string, at: string, cb: UserResponse) {
 schema.statics.pushSong = function (id_user: string, id_song: string, cb: UserResponse) {
     return this.findByIdAndUpdate({ _id: id_user }, { $push: { song_list: id_song } }, {}, cb);
 }
+
 
 export let User = mongoose.model<IUser>("User", schema) as IUserModel;

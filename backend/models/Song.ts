@@ -19,7 +19,10 @@ export interface ISong extends mongoose.Document {
 
 export interface ISongModel extends mongoose.Model<ISong> {
     // Personnal methods
+    listSongByObjId(user_list: string[], cb: (err: any, songs: ISong[]) => void): void;
 }
+
+
 
 let schema = new mongoose.Schema({
     name: {
@@ -29,7 +32,7 @@ let schema = new mongoose.Schema({
 
     image_cover: {
         type: String,
-        default:"default.png"
+        default: "default.png"
     },
 
     artists: {
@@ -51,13 +54,22 @@ let schema = new mongoose.Schema({
 
     uri: {
         type: String,
-        required:false
+        required: false
     },
 
     file_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
+    },
+
+    added_at : {
+        type: Date,
+        required: true,
+        default: Date.now()
     }
 })
 
+schema.statics.listSongByObjId = function (user_list: string[], cb: (err: any, songs: ISong[]) => void) {
+    return this.find({ _id: { $in: user_list } }, cb);
+}
 export let Song = mongoose.model<ISong>("Song", schema) as ISongModel;

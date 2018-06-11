@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { User, IUser, IUserModel } from '../models/User';
+import { Song } from '../models/Song';
 import { Repository } from './repository';
 import { Checker } from '../helpers/checker';
 import { JsonResponse } from '../helpers/response';
@@ -9,26 +10,25 @@ import * as bcrypt from 'bcrypt';
 
 export class UserController {
     private repo: Repository<IUserModel>;
-    private model: IUserModel;
 
     constructor(router: Router) {
 
-        this.model = User;
-        this.repo = new Repository<IUserModel>(this.model);
+        this.repo = new Repository<IUserModel>(User);
 
         // Binding
         this.register = this.register.bind(this);
         this.connexion = this.connexion.bind(this);
         this.logout = this.logout.bind(this);
-
+        this.getCurrentSession = this.getCurrentSession.bind(this);
         // Routes
         router.post("/user/register", this.register);
         router.post("/user/connexion", this.connexion);
-        router.get("/user/logout", UserMiddleware.is_allowed, this.logout);
+        router.post("/user/logout", UserMiddleware.is_allowed, this.logout);
+        router.get("/user/session", UserMiddleware.is_allowed, this.getCurrentSession);
     }
 
     async register(req: Request, res: Response) {
-        let body = req.body;
+        let body = JSON.parse(req.body);
 
         if (Checker.isUserValid(body)) {
             if (body.password != undefined) {
@@ -51,26 +51,27 @@ export class UserController {
     connexion(req: Request, res: Response) {
         let body = req.body;
         if (body.email == undefined || body.password == undefined) {
-            return res.json(JsonResponse.error("No email or password", 400));
+            return res.status(500).json(JsonResponse.error("No email or password", 400));
         }
 
+        User.findByMail(body.email, (err, user) => {
 
-        this.model.findByMail(body.email, (err, user) => {
             if (err) {
-                return res.json(JsonResponse.error("Mail not found", 400))
+                return res.status(400).json(JsonResponse.error("Mail not found", 400))
             }
             else if (user.is_connected) {
-                return res.json(JsonResponse.error("Already connected", 500))
+                return res.status(500).json(JsonResponse.error("Already connected", 500))
             }
+
 
             bcrypt.compare(body.password, user.password, (err2, same) => {
                 if (err2 || !same) {
-                    return res.json(JsonResponse.error("Incorrect password", 400))
+                    return res.status(400).json(JsonResponse.error("Incorrect password", 400))
                 }
 
-                this.model.findByIdAndUpdate(user._id, { "is_connected": true }, (err, idc) => {
+                User.findByIdAndUpdate(user._id, { "is_connected": true }, (err, idc) => {
                     if (err) {
-                        return res.json(JsonResponse.error("Something went wrong :(", 500));
+                        return res.status(500).json(JsonResponse.error("Something went wrong :(", 500));
                     }
 
                     user.is_connected = true;
@@ -83,12 +84,18 @@ export class UserController {
 
     }
 
+    getCurrentSession(req: Request, res : Response) {
+        if (req.session.user) {
+            return res.json(JsonResponse.success(req.session.user));
+        }
+        return res.status(500);
+    }
 
     logout(req: Request & { session: any }, res: Response) {
 
-        this.model.findByIdAndUpdate(req.session.user._id, { is_connected: false }, (err, result) => {
+        User.findByIdAndUpdate(req.session.user._id, { is_connected: false }, (err, result) => {
             if (err) {
-                return res.json(JsonResponse.error("Can't disconnect user", 500));
+                return res.status(500).json(JsonResponse.error(err, 500));
             }
 
             req.session.destroy();
@@ -96,5 +103,6 @@ export class UserController {
             return res.json(JsonResponse.success("Successfull disconnect"));
         });
     }
+
 
 }
