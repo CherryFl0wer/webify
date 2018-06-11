@@ -3,6 +3,7 @@ export const SpotifyLogginAction = 'SpotifyLoggin';
 export const UserLoggin = "UserLoggin";
 export const UserLogginFail = "UserLogginFail";
 export const UserRegister = "UserRegister";
+export const UserRegisterFail = "UserRegisterFail";
 export const UserLogout = "UserLogout";
 export const UserLogoutFail = "UserLogoutFail";
 

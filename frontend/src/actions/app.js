@@ -4,7 +4,7 @@ import {
     UserLoggin, SpotifyLogginAction, AddingPlaylistAction, GetAllSongsOfUser,
     ToggleModalOne, ToggleModalTwo, AddToQueue, UploadSong, UserLogginFail,
     UploadSongErr, UserLogout, UserLogoutFail, GetUserSession, DeleteSong,
-    DeleteSongFail
+    DeleteSongFail, UserRegister, UserRegisterFail
 } from '../constants/types'
 
 
@@ -65,13 +65,15 @@ export const userReg = (json) => {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            credentials: 'include',
             body: JSON.stringify(json)
         })
             .then(response => response.json())
             .then(res => {
+                console.log(res);
                 dispatch(({ type: UserRegister, data: res }))
-            });
+            }).catch(err => {
+                dispatch(({ type: UserRegisterFail, error: err }))
+            })
     }
 }
 
@@ -130,7 +132,6 @@ export const deleteSong = (id, idx) => {
         })
             .then(response => response.json())
             .then(res => {
-                console.log(res);
                 if (res.type != "error")
                     dispatch(({ type: DeleteSong, index: idx }))
             })

@@ -9,16 +9,20 @@ import {
 
 import { Route, Link, withRouter } from "react-router-dom";
 
-import AnimatedWrapper from '../lib/Animated';
-
 import * as FontAwesome from 'react-fontawesome';
 
-import { spotifyLoggin } from '../actions/app';
+import { spotifyLoggin, userReg } from '../actions/app';
 
 import '../assets/css/index.css';
 
 
 const Register = (props) => {
+    
+    let data = {
+        password: null,
+        email:null
+    };
+
     return (
         <div>
             <Card>
@@ -28,15 +32,15 @@ const Register = (props) => {
                     <Form>
                         <FormGroup>
                             <Label for="email">Email</Label>
-                            <Input type="email" name="email" placeholder="myemail@gmail.com" />
+                            <Input type="email" name="email" placeholder="myemail@gmail.com" onChange={(e) => data.email = e.target.value}/>
                         </FormGroup>
                         <FormGroup>
                             <Label for="password">Password</Label>
-                            <Input type="password" name="password" />
+                            <Input type="password" name="password" onChange={(e) => data.password = e.target.value} />
                         </FormGroup>
                     </Form>
 
-                    <Button color="primary">Register me</Button>
+                    <Button color="primary" onClick={() => props.register(data)}>Register me</Button>
                 </CardBody>
                 <CardFooter>
                     <CardText>
@@ -58,8 +62,8 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    spotifyConnexion: () => {
-        dispatch(spotifyLoggin());
+    register: (data) => {
+        dispatch(userReg(data));
     }
 });
 
