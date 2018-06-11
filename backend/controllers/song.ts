@@ -54,7 +54,10 @@ export class SongController {
         })
 
         this._upload = multer({
-            storage: storage
+            storage: storage,
+            limits: {
+                fileSize: 1024 * 1024 * 20
+            },
         });
 
         this.youtubeDownload = this.youtubeDownload.bind(this);
@@ -119,13 +122,19 @@ export class SongController {
         const origin: string = req.query.origin;
 
         const originType: SongType = (origin.toLowerCase() == SongType.SPOTIFY) ? SongType.SPOTIFY : SongType.LINK;
+
         let metadata: any = req.body;
 
-        console.log(req.body);
+        console.log("Downloading youtube video");
+
+        if (originType == SongType.SPOTIFY && metadata.forId == null)
+            return res.status(500).json(JsonResponse.error("Can't download spotify song", 500));
+
         requester({
             url: "https://m.youtube.com/results?client=mv-google&hl=fr&gl=FR&q=" + keywords + "+audio&submit=Rechercher",
             method: 'GET', gzip: true
         }, (err, resp, body) => {
+
             let firstVideo = unescape(body).match(/watch\?v=(.*?)+"/)[0];
             let codeVideo = firstVideo.match(/watch\?v=(.*?)\"/)[1];
             let urlYt = 'http://www.youtube.com/watch?v=' + codeVideo;
@@ -152,8 +161,8 @@ export class SongController {
                     cover: (metadata.cover) ? metadata.cover : "https://i.ytimg.com/vi/" + codeVideo + "/maxresdefault.jpg"
                 };
 
-                if (originType == SongType.SPOTIFY)
-                    res.locals.info.artist = metadata.artists.map((e: any) => e.name);
+                if (originType == SongType.SPOTIFY) 
+                    res.locals.forId = metadata.forId;
 
 
                 console.log("Downloading -> ", codeVideo, " waiting...");
@@ -196,10 +205,10 @@ export class SongController {
         let t = this;
 
         fs.unlink(pathMsc, (err: any) => {
+
             if (err) {
                 return res.status(500).json(JsonResponse.error(err, 500));
             }
-
 
             writestream.once('finish', async function () {
                 let artistList = (res.locals.info.artist instanceof Array) ? res.locals.info.artist : [res.locals.info.artist];
@@ -213,7 +222,8 @@ export class SongController {
                     file_id: writestream.id
                 });
 
-                User.pushSong(req.session.user._id, result.message._id, (err, updatedUser) => {
+                let id_user = (res.locals.origin != SongType.SPOTIFY) ? req.session.user._id : res.locals.forId;
+                User.pushSong(id_user, result.message._id, (err, updatedUser) => {
                     if (!err) {
                         return res.json(result);
                     }
@@ -236,9 +246,9 @@ export class SongController {
         let at = req.body.at;
         let offset = 0;
         let total = 0;
-        //let elems : any[] = [];
         requester("https://api.spotify.com/v1/me/tracks?limit=50&offset=" + offset, {
             json: true,
+            withCredentials: true,
             headers: {
                 'Authorization': 'Bearer ' + at
             }
@@ -250,28 +260,35 @@ export class SongController {
 
             offset += 50;
             total = body.total;
-            //elems.push(body.items);
             let elems = body.items;
             elems.forEach((track: any) => {
+                // Extract information
                 const artistList = track.track.artists;
 
                 let keyword = track.track.name;
                 if (artistList.length > 0) {
                     keyword += " " + artistList[0].name;
                 }
-                keyword = keyword.replace(/\s+/g, '+')
+                
+                keyword = keyword.replace(/\s+/g, '+');
+
+                const flat_artist = artistList
+                    .map((e: any) => e.name)
+                    .reduce((acc: any, elm: any) => acc + elm + ",", "");
 
                 console.log("Enqueuing spotify:", track.track.id, " - ", keyword);
 
                 SongWorker.enQueue({
                     videoId: track.track.id,
+                    artists: flat_artist.substring(0, flat_artist.length - 1),
+                    name: track.track.name,
                     keyword: keyword,
-                    artists: artistList,
-                    name: track.track.name
+                    forId: req.session.user._id
                 });
             });
 
-            return res.json(body)
+
+            return res.json(JsonResponse.success("Downloading your last 50 songs"))
         });
     }
 
