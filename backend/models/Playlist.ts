@@ -1,5 +1,5 @@
 import * as mongoose from "mongoose";
-import { ISong } from "./Song";
+import { Song, ISong } from "./Song";
 import { IUser } from "./User";
 
 export interface IPlaylist extends mongoose.Document {
@@ -13,9 +13,9 @@ type PlaylistResponse = (err: any, res: IPlaylist) => void;
 
 export interface IPlaylistModel extends mongoose.Model<IPlaylist> {
     // Personnal methods
-    findByTitle(title: string, sessionID : string, cb : PlaylistResponse) : void;
-    findByTitleAndRemove(title : string, sessionID: string, cb : PlaylistResponse) : void;
-    addIntoPlaylist(title: string, sessionID : string, idsong : string, cb : PlaylistResponse) : void;
+    findByTitle(title: string, sessionID: string, cb: PlaylistResponse): void;
+    findByTitleAndRemove(title: string, sessionID: string, cb: PlaylistResponse): void;
+    addIntoPlaylist(title: string, sessionID: string, idsong: string, cb: PlaylistResponse): void;
 }
 
 let schema = new mongoose.Schema({
@@ -24,10 +24,10 @@ let schema = new mongoose.Schema({
         required: true
     },
 
-    songs: {
-        type: [mongoose.Schema.Types.ObjectId],
-        default: []
-    },
+    songs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Song'
+    }],
 
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -36,16 +36,16 @@ let schema = new mongoose.Schema({
 })
 
 
-schema.statics.findByTitle = function (title: string, sessionID: string, cb: PlaylistResponse) : void {
+schema.statics.findByTitle = function (title: string, sessionID: string, cb: PlaylistResponse): void {
     return this.findOne({ $and: [{ title: title }, { user: sessionID }] }, cb);
 }
 
-schema.statics.findByTitleAndRemove = function (title : string, sessionID: string, cb : PlaylistResponse) : void {
+schema.statics.findByTitleAndRemove = function (title: string, sessionID: string, cb: PlaylistResponse): void {
     return this.findOneAndRemove({ $and: [{ title: title }, { user: sessionID }] }, cb);
 }
 
-schema.statics.addIntoPlaylist = function (title : string, sessionID: string, idsong: string, cb : PlaylistResponse) : void {
-    return this.findOneAndUpdate({ $and: [{ title: title }, { user: sessionID }] },  { $push: { songs: idsong } }, { returnNewDocument: true }, cb);
+schema.statics.addIntoPlaylist = function (title: string, sessionID: string, idsong: string, cb: PlaylistResponse): void {
+    return this.findOneAndUpdate({ $and: [{ title: title }, { user: sessionID }] }, { $push: { songs: idsong } }, { returnNewDocument: true }, cb);
 }
 
 
