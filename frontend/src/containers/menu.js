@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { createPlaylist, getPlaylists, switchPlaylist } from '../actions/playlists';
-import { displayAddingPlaylist, userLogout, getAllSongsOfUser} from '../actions/app';
+import { displayAddingPlaylist, userLogout, getAllSongsOfUser } from '../actions/app';
 import history from '../lib/history';
 import { Route, Link, withRouter } from "react-router-dom";
 
@@ -69,7 +69,7 @@ class Menu extends React.Component {
                         <Button color="danger" onClick={() => this.props.disconnect()}>Logout</Button>
                     </li>
 
-                    <li onClick={() => this.props.switchPlaylist("library")}> <a href="#">Library </a> </li>
+                    <li> <a href="#library" onClick={() => this.props.switchPlaylist("library")}>Library </a> </li>
 
 
                     <hr />
@@ -78,7 +78,7 @@ class Menu extends React.Component {
 
                     {
                         this.props.app.playlists.map((d, idx) => {
-                            return (<li key={idx} onClick={() => this.props.switchPlaylist(d.title)}> <a href="#"> {d.title} </a> </li>)
+                            return (<li key={idx} onClick={() => this.props.switchPlaylist(d.title)}> <a href={"#" + d.title}> {d.title} </a> </li>)
                         })
                     }
 
@@ -114,12 +114,12 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
 
     switchPlaylist: (title) => {
         dispatch(switchPlaylist(title)).then((props) => {
-            
-            let arr = props.app.playlists.find(e => e.title == title);
-            if (!arr || title == "library")
+
+            let idx = props.app.playlists.findIndex(e => e.title == title);
+            if (idx == -1 || title == "library")
                 dispatch(getAllSongsOfUser(props.app.user.song_list));
             else
-                dispatch(getAllSongsOfUser(arr.songs));
+                dispatch(getAllSongsOfUser(props.app.playlists[idx].songs));
 
         });
     },

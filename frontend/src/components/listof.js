@@ -6,7 +6,7 @@ import {
 } from 'reactstrap';
 import FontAwesome from 'react-fontawesome';
 import { getAllSongsOfUser, deleteSong, toggleModalAddPlaylist } from '../actions/app';
-import { addSongInPlaylist } from '../actions/playlists';
+import { addSongInPlaylist, removePlaylist } from '../actions/playlists';
 import { addToQueue, playMusic, pauseMusic } from '../actions/player';
 import AddBtn from './addbtn';
 import SpotifyDlBtn from './spotifydlbtn';
@@ -24,15 +24,6 @@ class ListOf extends React.Component {
 
     componentWillMount() {
         this.props.getAllSong(this.props.app.user.song_list);
-       /* if (this.props.app.currentPlaylist == "library") {
-            this.props.getAllSong(this.props.app.user.song_list);
-        } else {
-            let arr = this.props.app.playlists.find(e => e.title == this.props.app.currentPlaylist);
-            if (!arr)
-                this.props.getAllSong(this.props.app.user.song_list);
-            else
-                this.props.getAllSong(arr.songs);
-        }*/
     }
 
 
@@ -60,7 +51,7 @@ class ListOf extends React.Component {
             return <FontAwesome name="play" />
         };
 
-        const btnAddToPlaylist = () => {
+        const btnAddToPlaylist = (item) => {
             if (this.props.app.currentPlaylist == "library") {
                 return (
 
@@ -105,7 +96,17 @@ class ListOf extends React.Component {
             }
         };
 
-
+        const btnDeletePlaylist = (title) => {
+            if (this.props.app.currentPlaylist != "library") {
+                return (<tr>
+                    <td colSpan="2"></td>
+                    <td colSpan="3" style={{ 'textAlign': 'center' }}>
+                        <Button color="danger" onClick={() => this.props.deletePlaylist(title, this.props.app.user.song_list)}>Delete playlist</Button>
+                    </td>
+                    <td colSpan="2"></td>
+                </tr>)
+            }
+        }
 
         return (
             <div>
@@ -133,18 +134,20 @@ class ListOf extends React.Component {
                                         <th scope="row" onClick={() => this.switchPlayer(idx)}>
                                             {playOrNot(idx)}
                                         </th>
-                                        <td>{item.name.substr(0, 20)}</td>
+                                        <td>{item.name.substr(0, 25)}</td>
                                         <td>{item.artists}</td>
                                         <td>{min} : {sec}</td>
                                         <td>{item.added_at}</td>
                                         <td>{item.type}</td>
 
                                         {btnDeleteSong(item._id, idx)}
-                                        {btnAddToPlaylist()}
+                                        {btnAddToPlaylist(item)}
                                     </tr>)
                             })
                         }
                         {btnAddSong()}
+
+                        {btnDeletePlaylist(this.props.app.currentPlaylist)}
 
                         {displaySpotifyBtn() }
                     </tbody>
@@ -201,6 +204,12 @@ const mapDispatchToProps = (dispatch) => ({
             dispatch(toggleModalAddPlaylist());
         })
 
+    },
+
+    deletePlaylist: (title, listsongs) => {
+        dispatch(removePlaylist(title)).then(() => {
+            dispatch(getAllSongsOfUser(listsongs));
+        });
     },
 
     deleteSong: (id, idx) => {

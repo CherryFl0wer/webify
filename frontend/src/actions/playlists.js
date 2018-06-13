@@ -51,7 +51,6 @@ export const getPlaylist = (title) => {
     }
 }
 export const getPlaylists = () => {
-    console.log("Getting playlists")
     return dispatch => {
         return fetch('http://localhost:3000/playlists', {
             method: "GET",
@@ -69,7 +68,7 @@ export const getPlaylists = () => {
 }
 
 export const removePlaylist = (title) => {
-    return dispatch => {
+    return (dispatch, getState) => {
         return fetch('http://localhost:3000/playlist/' + title, {
             method: "DELETE",
             headers: {
@@ -80,7 +79,7 @@ export const removePlaylist = (title) => {
         })
             .then(response => response.json())
             .then(res => {
-                dispatch(({ type: DeletePlaylist, data: res }))
+                dispatch(({ type: DeletePlaylist, title: title }))
             })
             .catch(err => {
                 dispatch(({ type: DeletePlaylistFail, error: err }))
@@ -100,7 +99,7 @@ export const addSongInPlaylist = (title, idsong) => {
         })
             .then(response => response.json())
             .then(res => {
-                dispatch(({ type: AddSongInPlaylist, data: res }))
+                dispatch(({ type: AddSongInPlaylist, title: title, id: idsong }))
             })
             .catch(err => {
                 dispatch(({ type: AddSongInPlaylistFail, error: err }))

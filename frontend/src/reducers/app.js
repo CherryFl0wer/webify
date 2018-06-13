@@ -19,31 +19,31 @@ export default function app(state = identity, action) {
     let napp;
     switch (action.type) {
 
-        case types.ToggleModalOne:
+        case types.ToggleModalOne:  {
             napp = Object.assign({}, state, {
                 modalStepOne: !state.modalStepOne
             });
 
             return napp;
-
-        case types.ToggleModalTwo:
+        }
+        case types.ToggleModalTwo: {
             napp = Object.assign({}, state, {
                 modalStepTwo: !state.modalStepTwo,
                 modalStepOne: false
             });
 
             return napp;
+        }
 
-
-        case types.AddingPlaylistAction:
+        case types.AddingPlaylistAction: {
             napp = Object.assign({}, state, {
                 adding_playlist: !state.adding_playlist
             });
 
             return napp;
+        }
 
-
-        case types.SpotifyLogginAction:
+        case types.SpotifyLogginAction: {
             const res = action.result;
             if (res != undefined) {
                 napp = Object.assign({}, state, {
@@ -55,15 +55,15 @@ export default function app(state = identity, action) {
                 return napp;
             }
             return state;
+        }
 
-
-        case types.UserRegister:
+        case types.UserRegister: {
             napp = Object.assign({}, state);
             history.push('/')
             history.go();
             return napp;
-
-        case types.UserLoggin:
+        }
+        case types.UserLoggin: {
             if (action.data.type == 'success') {
                 napp = Object.assign({}, state, {
                     is_connected: true,
@@ -71,8 +71,8 @@ export default function app(state = identity, action) {
                 });
             }
             return napp;
-
-        case types.GetAllSongsOfUser:
+        }
+        case types.GetAllSongsOfUser: {
             napp = Object.assign({}, state);
             if (action.data.message) {
                 napp.queueSong = action.data.message;
@@ -81,66 +81,81 @@ export default function app(state = identity, action) {
                 })
             }
             return napp;
-
-        case types.SwitchPlaylist:
+        }
+        case types.SwitchPlaylist: {
             napp = Object.assign({}, state);
             napp.currentPlaylist = action.title;
 
             return napp;
-
-        case types.UploadSong:
+        }
+        case types.UploadSong: {
             napp = Object.assign({}, state);
             action.data.duration_sec = action.data.duration_ms / 1000;
             napp.queueSong.push(action.data);
             return napp;
-
-        case types.UserLogout:
+        }
+        case types.UserLogout: {
             napp = Object.assign({}, state, identity);
             return napp;
-
-        case types.DeleteSong:
+        }
+        case types.DeleteSong: {
             napp = Object.assign({}, state);
             napp.queueSong.splice(action.index, 1);
             return napp;
-
-        case types.GetUserSession:
+        }
+        case types.GetUserSession: {
             napp = Object.assign({}, state);
             napp.user = action.data;
             napp.is_connected = true;
             return napp;
-
-        case types.DownloadingSpotifySong:
+        }
+        case types.DownloadingSpotifySong: {
             napp = Object.assign({}, state);
             return napp;
+        }
+        case types.AddSongInPlaylist: {
+            napp = Object.assign({}, state);
 
-        case types.AddSongInPlaylist:
+            const idx = napp.playlists.findIndex(e => e.title == action.title);
+            if (idx != -1) {
+                napp.playlists[idx].songs.push(action.id);
+            }
+            return napp;
+        }
+
+        case types.DeletePlaylist: {
+            napp = Object.assign({}, state);
+            const idx = napp.playlists.findIndex(e => e.title == action.title);
+            if (idx != -1) {
+                napp.playlists.splice(idx, 1);
+                napp.currentPlaylist = 'library';
+            }
+            return napp;
+        }
+        case types.GetPlaylist: {
             napp = Object.assign({}, state);
             return napp;
+        }
 
-        case types.DeletePlaylist:
-            napp = Object.assign({}, state);
-            return napp;
-
-        case types.GetPlaylist:
-            napp = Object.assign({}, state);
-            return napp;
-
-        case types.GetPlaylists:
+        case types.GetPlaylists: {
             napp = Object.assign({}, state);
             const data = action.data.message;
+            napp.playlists = [];
             data.forEach(item => {
                 napp.playlists.push(item)
             });
             return napp;
-        case types.CreatePlaylist:
+        }
+        case types.CreatePlaylist: {
             napp = Object.assign({}, state);
             napp.playlists.push(action.data.message)
             return napp;
-
-        case types.ToggleModalAddPlaylist:
+        }
+        case types.ToggleModalAddPlaylist: {
             napp = Object.assign({}, state);
             napp.modalAddPlaylist = !napp.modalAddPlaylist;
             return napp;
+        }
         default:
             return state;
     }
