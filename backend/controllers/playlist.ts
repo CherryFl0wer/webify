@@ -5,7 +5,7 @@ import { Checker } from '../helpers/checker';
 import { JsonResponse } from '../helpers/response';
 import { UserMiddleware } from '../middlewares/user';
 
-import { Types } from 'mongoose';
+import { Types, mongo, Mongoose } from 'mongoose';
 
 import { IPlaylist, IPlaylistModel, Playlist } from '../models/Playlist';
 import {  Song, ISong } from '../models/Song';
@@ -63,8 +63,6 @@ export class PlaylistController {
 
     }
 
-    // Rename Method ???
-
 
     display(req: Request, res: Response) {
 
@@ -103,7 +101,7 @@ export class PlaylistController {
         const title = req.params.title as string;
 
         this.model.findByTitleAndRemove(title, req.session.user._id, (err, playlist) => {
-
+            
             if (err) {
                 return res.status(500).json(JsonResponse.error(err, 500));
             }
@@ -116,12 +114,10 @@ export class PlaylistController {
     addSong(req: Request, res: Response) {
         const title = req.params.title as string;
         const idsong = req.params.idsong as string;
-
         this.model.addIntoPlaylist(title, req.session.user._id, idsong, (err, playlist) => {
             if (err || !playlist) {
                 return res.status(500).json(JsonResponse.error(err, 500));
             }
-
 
             return res.json(JsonResponse.success(playlist));
         })

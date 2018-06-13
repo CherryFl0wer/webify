@@ -37,11 +37,12 @@ let schema = new mongoose.Schema({
 
 
 schema.statics.findByTitle = function (title: string, sessionID: string, cb: PlaylistResponse): void {
-    return this.findOne({ $and: [{ title: title }, { user: sessionID }] }, cb);
+    return this.findOne({ $and: [{ title: title }, { user: mongoose.Types.ObjectId(sessionID) }] }, cb);
 }
 
 schema.statics.findByTitleAndRemove = function (title: string, sessionID: string, cb: PlaylistResponse): void {
-    return this.findOneAndRemove({ $and: [{ title: title }, { user: sessionID }] }, cb);
+    console.log(title, sessionID);
+    return this.findOneAndRemove({ $and: [{ title: title }, { user: mongoose.Types.ObjectId(sessionID) }] }, cb);
 }
 
 schema.statics.addIntoPlaylist = function (title: string, sessionID: string, idsong: string, cb: PlaylistResponse): void {
