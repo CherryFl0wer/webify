@@ -5,7 +5,7 @@ import {
     ToggleModalOne, ToggleModalTwo, AddToQueue, UploadSong, UserLogginFail,
     UploadSongErr, UserLogout, UserLogoutFail, GetUserSession, DeleteSong,
     DeleteSongFail, UserRegister, UserRegisterFail,DownloadingSpotifySong,
-    DownloadingSpotifySongFail
+    DownloadingSpotifySongFail, ToggleModalAddPlaylist
 } from '../constants/types'
 
 
@@ -160,6 +160,7 @@ export const getAllSongsOfUser = (listsong) => {
     }
 }
 
+
 export const uploadSong = (form, data) => {
 
     const action = (data.ytid) ? "ytdl" : "upload";
@@ -215,3 +216,4 @@ export const toggleModalOne = () => ({ type: ToggleModalOne })
 
 export const toggleModalTwo = () => ({ type: ToggleModalTwo })
 
+export const toggleModalAddPlaylist = () => ({ type: ToggleModalAddPlaylist })

@@ -13,11 +13,13 @@ import { getUserSession } from './actions/app';
 import './assets/css/main.css'
 
 const libs = ["Songs", "Listened recently", "Youtube"];
-const playlists = ["Playlist 1", "Playlist 2", "Playlist 3"];
 
 class App extends React.Component {
     constructor(props) {
         super(props);
+    }
+
+    componentWillMount() {
         this.props.userSession();
     }
 
@@ -25,7 +27,7 @@ class App extends React.Component {
         if (this.props.app.is_connected) {
             return (
                 <div id="wrapper" className={"toggled"}>
-                    <Menu title="Webify" libs={libs} playlists={playlists} />
+                    <Menu title="Webify" libs={libs}  />
                     <Body />
                 </div>
             );

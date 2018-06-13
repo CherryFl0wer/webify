@@ -8,7 +8,10 @@ let identity = {
     user: null, // user data
     modalStepOne: false,
     modalStepTwo: false,
-    queueSong: []
+    modalAddPlaylist: false,
+    currentPlaylist: "library",
+    queueSong: [], // library of user
+    playlists: []
 }
 
 export default function app(state = identity, action) {
@@ -71,13 +74,18 @@ export default function app(state = identity, action) {
 
         case types.GetAllSongsOfUser:
             napp = Object.assign({}, state);
-            console.log("Getting user song", action.data);
             if (action.data.message) {
                 napp.queueSong = action.data.message;
                 napp.queueSong.forEach(item => {
                     item.duration_sec = item.duration_ms / 1000;
                 })
             }
+            return napp;
+
+        case types.SwitchPlaylist:
+            napp = Object.assign({}, state);
+            napp.currentPlaylist = action.title;
+
             return napp;
 
         case types.UploadSong:
@@ -105,33 +113,34 @@ export default function app(state = identity, action) {
             napp = Object.assign({}, state);
             return napp;
 
-
-
-        case types.DownloadingSpotifySongFail:
+        case types.AddSongInPlaylist:
             napp = Object.assign({}, state);
             return napp;
 
-        case types.DeleteSongFail:
+        case types.DeletePlaylist:
             napp = Object.assign({}, state);
             return napp;
 
-        case types.UserLogoutFail:
+        case types.GetPlaylist:
             napp = Object.assign({}, state);
             return napp;
 
-        case types.UserLogginFail:
+        case types.GetPlaylists:
             napp = Object.assign({}, state);
+            const data = action.data.message;
+            data.forEach(item => {
+                napp.playlists.push(item)
+            });
+            return napp;
+        case types.CreatePlaylist:
+            napp = Object.assign({}, state);
+            napp.playlists.push(action.data.message)
             return napp;
 
-        case types.UserRegisterFail:
+        case types.ToggleModalAddPlaylist:
             napp = Object.assign({}, state);
+            napp.modalAddPlaylist = !napp.modalAddPlaylist;
             return napp;
-
-        case types.UploadSongErr:
-            napp = Object.assign({}, state);
-            return napp;
-
-
         default:
             return state;
     }

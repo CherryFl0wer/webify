@@ -99,6 +99,10 @@
     color: #fff;
     background: rgba(255, 255, 255, 0.2);
   }
+
+  .sidebar-nav li.input-playlist {
+
+  }
   
   .sidebar-nav li a:active, .sidebar-nav li a:focus {
     text-decoration: none;
@@ -211,8 +215,8 @@
     left:-10%;
   }
 
-  .input-playlist input {
-    width:80%;
+  li.input-playlist {
+    width:90%;
     margin: 0 0 0 1rem;
   }
 
