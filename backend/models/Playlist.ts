@@ -16,6 +16,7 @@ export interface IPlaylistModel extends mongoose.Model<IPlaylist> {
     findByTitle(title: string, sessionID: string, cb: PlaylistResponse): void;
     findByTitleAndRemove(title: string, sessionID: string, cb: PlaylistResponse): void;
     addIntoPlaylist(title: string, sessionID: string, idsong: string, cb: PlaylistResponse): void;
+    removeIntoPlaylist(title: string, sessionID: string, idsong: string, cb: PlaylistResponse): void;
 }
 
 let schema = new mongoose.Schema({
@@ -49,5 +50,8 @@ schema.statics.addIntoPlaylist = function (title: string, sessionID: string, ids
     return this.findOneAndUpdate({ $and: [{ title: title }, { user: sessionID }] }, { $push: { songs: idsong } }, { returnNewDocument: true }, cb);
 }
 
+schema.statics.removeIntoPlaylist = function (title: string, sessionID: string, idsong: string, cb: PlaylistResponse): void {
+    return this.update({  $and: [{ title: title }, { user: mongoose.Types.ObjectId(sessionID) }]}, { $pull: { songs: idsong } }, cb);
+}
 
 export let Playlist = mongoose.model<IPlaylist>("Playlist", schema) as IPlaylistModel;

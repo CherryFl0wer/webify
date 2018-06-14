@@ -17,6 +17,7 @@ import * as multer from 'multer';
 
 import { Types } from 'mongoose';
 import { Readable } from 'stream';
+import { Playlist } from '../models/Playlist';
 
 let ytdl = require('youtube-dl');
 let mp3duration = require('mp3-duration');
@@ -91,9 +92,12 @@ export class SongController {
                 return res.status(500).json(JsonResponse.error(err, 500));
             }
 
+            console.log(req.file);
             const song = req.file;
             const data = req.body;
-
+            if (!song)
+                return res.status(500).json(JsonResponse.error("Undefined file", 500));
+                
             mp3duration(song.path, (err: any, duration: number) => {
                 // There is a formula to calculate but i need bitrate and channels.
 
@@ -371,7 +375,7 @@ export class SongController {
         let t = this;
         Song.findByIdAndRemove(id, (err, song) => {
 
-            if (err) {
+            if (err || !song) {
                 return res.status(500).json(JsonResponse.error(err, 500));
             }
 

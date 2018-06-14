@@ -19,12 +19,14 @@ export class UserController {
         this.register = this.register.bind(this);
         this.connexion = this.connexion.bind(this);
         this.logout = this.logout.bind(this);
+        this.songlist = this.songlist.bind(this);
         this.getCurrentSession = this.getCurrentSession.bind(this);
         // Routes
         router.post("/user/register", this.register);
         router.post("/user/connexion", this.connexion);
         router.post("/user/logout", UserMiddleware.is_allowed, this.logout);
         router.get("/user/session", UserMiddleware.is_allowed, this.getCurrentSession);
+        router.get("/user/spotify_songlist", UserMiddleware.is_allowed, this.songlist);
     }
 
     async register(req: Request, res: Response) {
@@ -47,6 +49,15 @@ export class UserController {
         return res.json(JsonResponse.error("User not valid", 400));
     }
 
+    songlist(req: Request, res: Response) {
+        let session = req.session.user;
+        User.findById(session._id, (err, user) => {
+            if (err)
+                return res.status(500).json(JsonResponse.error("Can't reach user", 500));
+
+            return res.json(JsonResponse.success(user.song_list));
+        });
+    }
 
     connexion(req: Request, res: Response) {
         let body = req.body;
@@ -54,9 +65,10 @@ export class UserController {
             return res.status(500).json(JsonResponse.error("No email or password", 400));
         }
 
-        User.findByMail(body.email, (err, user) => {
 
-            if (err) {
+        User.findByMail(body.email, (err, user) => {
+            
+            if (err || !user) {
                 return res.status(400).json(JsonResponse.error("Mail not found", 400))
             }
             else if (user.is_connected) {

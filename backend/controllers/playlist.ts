@@ -25,6 +25,7 @@ export class PlaylistController {
         this.display = this.display.bind(this);
         this.all = this.all.bind(this);
         this.delete = this.delete.bind(this);
+        this.removeSong = this.removeSong.bind(this);
         this.addSong = this.addSong.bind(this);
         // Routes
 
@@ -33,6 +34,8 @@ export class PlaylistController {
         router.get("/playlists", UserMiddleware.is_allowed, this.all);
         router.delete("/playlist/:title", UserMiddleware.is_allowed, this.delete);
         router.post("/playlist/:title/add/:idsong", UserMiddleware.is_allowed, this.addSong);
+
+        router.delete("/playlist/:title/remove/:idsong", UserMiddleware.is_allowed, this.removeSong);
     }
 
 
@@ -122,5 +125,18 @@ export class PlaylistController {
             return res.json(JsonResponse.success(playlist));
         })
     }
+
+    removeSong(req: Request, res: Response) {
+        const title = req.params.title as string;
+        const idsong = req.params.idsong as string;
+        this.model.removeIntoPlaylist(title, req.session.user._id, idsong, (err, playlist) => {
+            if (err || !playlist) {
+                return res.status(500).json(JsonResponse.error(err, 500));
+            }
+
+            return res.json(JsonResponse.success("deleted"));
+        })
+    }
+
 
 }
