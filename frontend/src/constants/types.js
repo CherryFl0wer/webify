@@ -11,6 +11,7 @@ export const UserLogoutFail = "UserLogoutFail";
 
 
 export const GetAllSongsOfUser = "GetAllSongOfUser";
+export const GetUserSongList = "GetUserSongList";
 export const GetUserSession = "GetUserSession";
 
 export const CreatePlaylist = "CreatePlaylist";
@@ -24,6 +25,8 @@ export const GetPlaylistsFail = "GetPlaylistFail";
 export const AddSongInPlaylist = "AddSongInPlaylist";
 export const AddSongInPlaylistFail = "AddSongInPlaylistFail";
 export const SwitchPlaylist = "SwitchPlaylist";
+export const RemoveSongInPlaylist = "RemoveSongInPlaylist";
+export const RemoveSongInPlaylistFail = "RemoveSongInPlaylistFail";
 
 export const PlayerPlaying = "PlayerPlaying";
 export const PlayerPausing = "PlayerPausing";

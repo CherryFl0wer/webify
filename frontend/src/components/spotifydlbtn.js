@@ -6,19 +6,19 @@ import {
 } from 'reactstrap';
 
 import FontAwesome from 'react-fontawesome';
-import { dlSpotifySong } from '../actions/app';
+import { dlSpotifySong, getUserSongList } from '../actions/app';
 import '../assets/css/index.css';
 
+let songlist = null;
 const SpotifyDlBtn = (props) => {
-
-    console.log(props.app);
-
-    return (
-        <div>
-            <Button outline color="success" size="lg" onClick={() => props.dl50(props.app.user.access_token)}>Spotify last 50</Button>
-
-        </div>
-    );
+    if (!props.app.downloadedSpotifySong) {
+        return (
+            <div>
+                <Button outline color="success" size="lg" onClick={() => props.dl50(props.app.user.access_token)}>Spotify last 50</Button>
+            </div>
+        );
+    } 
+    return <div></div>
 }
 
 const mapStateToProps = (state, ownProps) => ({
@@ -28,8 +28,9 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     dl50: (at) => {
-        console.log(at);
-        dispatch(dlSpotifySong(at))
+        dispatch(dlSpotifySong(at));
+        clearInterval(songlist);
+        songlist = setInterval(() => dispatch(getUserSongList()), 5000);
     }
 });
 

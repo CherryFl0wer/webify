@@ -10,16 +10,16 @@ let identity = {
     modalStepTwo: false,
     modalAddPlaylist: false,
     currentPlaylist: "library",
+    downloadedSpotifySong: false,
     queueSong: [], // library of user
     playlists: []
 }
 
 export default function app(state = identity, action) {
-
     let napp;
     switch (action.type) {
 
-        case types.ToggleModalOne:  {
+        case types.ToggleModalOne: {
             napp = Object.assign({}, state, {
                 modalStepOne: !state.modalStepOne
             });
@@ -57,6 +57,11 @@ export default function app(state = identity, action) {
             return state;
         }
 
+        case types.GetUserSongList: {
+            napp = Object.assign({}, state);
+            return napp;
+        }
+
         case types.UserRegister: {
             napp = Object.assign({}, state);
             history.push('/')
@@ -85,13 +90,13 @@ export default function app(state = identity, action) {
         case types.SwitchPlaylist: {
             napp = Object.assign({}, state);
             napp.currentPlaylist = action.title;
-
             return napp;
         }
         case types.UploadSong: {
             napp = Object.assign({}, state);
             action.data.duration_sec = action.data.duration_ms / 1000;
             napp.queueSong.push(action.data);
+            napp.user.song_list.push(action.data._id);
             return napp;
         }
         case types.UserLogout: {
@@ -111,6 +116,7 @@ export default function app(state = identity, action) {
         }
         case types.DownloadingSpotifySong: {
             napp = Object.assign({}, state);
+            napp.downloadedSpotifySong = true;
             return napp;
         }
         case types.AddSongInPlaylist: {
@@ -119,6 +125,19 @@ export default function app(state = identity, action) {
             const idx = napp.playlists.findIndex(e => e.title == action.title);
             if (idx != -1) {
                 napp.playlists[idx].songs.push(action.id);
+            }
+            return napp;
+        }
+
+        case types.RemoveSongInPlaylist: {
+            napp = Object.assign({}, state);
+
+            const idx = napp.playlists.findIndex(e => e.title == action.title);
+
+            if (idx != -1) {
+                let songidx = napp.playlists[idx].songs.findIndex(e => e == action.id);
+                if (songidx != -1)
+                    napp.playlists[idx].songs.splice(songidx, 1);
             }
             return napp;
         }

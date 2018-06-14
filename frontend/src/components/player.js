@@ -44,11 +44,15 @@ class Player extends React.Component {
     updateTime() {
 
         if (this._audio) {
-            if (this._ntime != -1)
-                this._audio.currentTime = this._ntime; // DOES NOT WORK IDK WHY HELP MEEEE !! THIS SHIT SET TO 0 AUTOMATICALLY
-                                                      // LEADING TO SLIDER NOT WORKING 
+            if (this._ntime != -1) {
+                this._audio.currentTime = this._ntime;
+                console.log(this._audio.currentTime, this._ntime);
+
+                this._currentTime = this._audio.currentTime;
+            }
+
             this._currentTime = this._audio.currentTime;
-            this._ntime = -1;
+         //   this._ntime = -1; // reset selected click on slider
             let sec = Math.round(this._currentTime);
             let min = Math.floor(sec / 60);
             let nsec = sec % 60;
@@ -146,7 +150,7 @@ class Player extends React.Component {
                         </div>
                         <div className="col-md-1 action">
                             <span ref={(span) => this._currentTimingSpan = span} className="currentTiming">
-                                {(this._currentTime == 0) ? "0:00" : this._currentTime}</span>
+                            </span>
                         </div>
                         <div className="col-md-9 action">
 

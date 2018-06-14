@@ -62,10 +62,7 @@ const AddBtn = (props) => {
                             <Input type="text" name="artistsSong" id="artistsSong" placeholder="A,B,C" onChange={(e) => artists = e.target.value} />
                         </FormGroup>
 
-                        <FormGroup>
-                            <Label for="imageCover">Url image cover</Label>
-                            <Input type="url" name="url" id="imageCover" placeholder="url image cover" onChange={(e) => imagecover = e.target.value} />
-                        </FormGroup>
+                      
                     </Form>
                 </ModalBody>
                 <ModalFooter>

@@ -2,7 +2,8 @@ import fetch from 'cross-fetch';
 import {
     CreatePlaylist, CreatePlaylistFail, DeletePlaylist, DeletePlaylistFail,
     GetPlaylist, GetPlaylistFail, AddSongInPlaylist, AddSongInPlaylistFail,
-    GetPlaylists, GetPlaylistsFail, SwitchPlaylist
+    GetPlaylists, GetPlaylistsFail, SwitchPlaylist, RemoveSongInPlaylist,
+    RemoveSongInPlaylistFail
 } from '../constants/types'
 
 
@@ -107,11 +108,34 @@ export const addSongInPlaylist = (title, idsong) => {
     }
 }
 
+
+
+export const removeSongInPlaylist = (title, idsong) => {
+    return dispatch => {
+        return fetch('http://localhost:3000/playlist/' + title + "/remove/" + idsong, {
+            method: "DELETE",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                dispatch(({ type: RemoveSongInPlaylist, title: title, id: idsong }))
+
+            })
+            .catch(err => {
+                dispatch(({ type: RemoveSongInPlaylistFail, error: err }))
+            });
+    }
+}
+
 export const switchPlaylist = (title) => {
     return (dispatch, getState) => new Promise((resolve, reject) => {
-        dispatch(({type: SwitchPlaylist, title: title}));
+        dispatch(({ type: SwitchPlaylist, title: title }));
         let state = getState();
-    
+
         resolve(state);
     });
 }

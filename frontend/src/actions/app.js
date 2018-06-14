@@ -160,6 +160,26 @@ export const getAllSongsOfUser = (listsong) => {
     }
 }
 
+export const getUserSongList = () => {
+    return dispatch => {
+        return fetch('http://localhost:3000/user/spotify_songlist', {
+            method: "GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                console.log(res);
+                 return res.message
+            }).then(data => {
+                dispatch(getAllSongsOfUser(data));
+            });
+    }
+}
+
 
 export const uploadSong = (form, data) => {
 

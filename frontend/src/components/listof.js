@@ -6,7 +6,7 @@ import {
 } from 'reactstrap';
 import FontAwesome from 'react-fontawesome';
 import { getAllSongsOfUser, deleteSong, toggleModalAddPlaylist } from '../actions/app';
-import { addSongInPlaylist, removePlaylist } from '../actions/playlists';
+import { addSongInPlaylist, removePlaylist, removeSongInPlaylist } from '../actions/playlists';
 import { addToQueue, playMusic, pauseMusic } from '../actions/player';
 import AddBtn from './addbtn';
 import SpotifyDlBtn from './spotifydlbtn';
@@ -20,13 +20,24 @@ class ListOf extends React.Component {
 
         this.switchPlayer = this.switchPlayer.bind(this);
         this.item = null;
+
+
+        this.props.getAllSong(this.props.app.user.song_list)
+
+        this.interv = setInterval(() => {
+            if (this.props.app.currentPlaylist == "library")
+                this.props.getAllSong(this.props.app.user.song_list)
+            else {
+                let idx = this.props.app.playlists.findIndex(e => e.title == this.props.app.currentPlaylist);
+                if (idx != -1)
+                    this.props.getAllSong(this.props.app.playlists[idx].songs);
+            }
+
+        }, 1000);
     }
-
-    componentWillMount() {
-        this.props.getAllSong(this.props.app.user.song_list);
+    componentWillUnmount() {
+        clearInterval(this.interv);
     }
-
-
 
     switchPlayer(idx) {
         const didChange = idx != this.props.player.curIdxInQueue;
@@ -44,8 +55,8 @@ class ListOf extends React.Component {
 
     render() {
 
-        const playOrNot = (idx) => {
-            if (this.props.player.curIdxInQueue == idx && this.props.player.playing)
+        const playOrNot = (idx, itemid) => {
+            if (this.props.player.metadata._id == itemid && this.props.player.playing)
                 return <FontAwesome name="pause" />
 
             return <FontAwesome name="play" />
@@ -59,15 +70,20 @@ class ListOf extends React.Component {
                         <Button color="secondary" onClick={() => {
                             this.item = item;
                             this.props.displayModal()
-                        }}><FontAwesome name='list' /></Button>
+                        }}>
+                            <FontAwesome name='list' /></Button>
                     </td>);
             }
         };
 
-        const btnDeleteSong = (id, idx) => {
+        const btnDeleteSong = (id, t) => {
             if (this.props.app.currentPlaylist == "library") {
                 return (<td>
-                    <Button color="danger" onClick={() => this.props.deleteSong(id, idx)}>X</Button>{' '}
+                    <Button color="danger" onClick={() => this.props.deleteSong(id, t)}>X</Button>{' '}
+                </td>);
+            } else {
+                return (<td>
+                    <Button color="danger" onClick={() => this.props.removeSongInPlaylist(this.props.app.currentPlaylist, id, this.props.app.queueSong)}>X</Button>{' '}
                 </td>);
             }
         }
@@ -75,9 +91,10 @@ class ListOf extends React.Component {
         const btnAddSong = () => {
             if (this.props.app.currentPlaylist == "library") {
                 return (<tr>
-                    <td colSpan="3"></td>
-                    <td colSpan="2" style={{ 'textAlign': 'center' }}>
-                        <AddBtn />
+                    <td colSpan="2"></td>
+                    <td colSpan="3" style={{ 'textAlign': 'center' }}>
+                        <AddBtn /><br />
+                        {displaySpotifyBtn() }
                     </td>
                     <td colSpan="3"></td>
                 </tr>);
@@ -86,13 +103,7 @@ class ListOf extends React.Component {
 
         const displaySpotifyBtn = () => {
             if (this.props.app.user_atok_spotify != null && this.props.app.currentPlaylist == "library") {
-                return (<tr>
-                    <td colSpan="2"></td>
-                    <td colSpan="3" style={{ 'textAlign': 'center' }}>
-                        <SpotifyDlBtn />
-                    </td>
-                    <td colSpan="2"></td>
-                </tr>)
+                return <SpotifyDlBtn />
             }
         };
 
@@ -132,7 +143,7 @@ class ListOf extends React.Component {
                                 return (
                                     <tr key={idx}>
                                         <th scope="row" onClick={() => this.switchPlayer(idx)}>
-                                            {playOrNot(idx)}
+                                            {playOrNot(idx, item._id)}
                                         </th>
                                         <td>{item.name.substr(0, 25)}</td>
                                         <td>{item.artists}</td>
@@ -148,8 +159,6 @@ class ListOf extends React.Component {
                         {btnAddSong()}
 
                         {btnDeletePlaylist(this.props.app.currentPlaylist)}
-
-                        {displaySpotifyBtn() }
                     </tbody>
                 </Table>
 
@@ -182,6 +191,7 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
+
     getAllSong: (listsongs) => {
         dispatch(getAllSongsOfUser(listsongs));
     },
@@ -209,6 +219,12 @@ const mapDispatchToProps = (dispatch) => ({
     deletePlaylist: (title, listsongs) => {
         dispatch(removePlaylist(title)).then(() => {
             dispatch(getAllSongsOfUser(listsongs));
+        });
+    },
+
+    removeSongInPlaylist: (title, idsong, listsongs) => {
+        dispatch(removeSongInPlaylist(title, idsong)).then(() => {
+            
         });
     },
 

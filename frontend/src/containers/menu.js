@@ -78,6 +78,9 @@ class Menu extends React.Component {
 
                     {
                         this.props.app.playlists.map((d, idx) => {
+                            if (this.props.app.currentPlaylist == d.title) {
+                                return (<li key={idx} className="selectedPlaylist" onClick={() => this.props.switchPlaylist(d.title)}> <a href={"#" + d.title}> {d.title} </a> </li>)
+                            }
                             return (<li key={idx} onClick={() => this.props.switchPlaylist(d.title)}> <a href={"#" + d.title}> {d.title} </a> </li>)
                         })
                     }
