@@ -97,7 +97,7 @@ export class SongController {
             const data = req.body;
             if (!song)
                 return res.status(500).json(JsonResponse.error("Undefined file", 500));
-                
+
             mp3duration(song.path, (err: any, duration: number) => {
                 // There is a formula to calculate but i need bitrate and channels.
 
@@ -139,8 +139,16 @@ export class SongController {
             method: 'GET', gzip: true
         }, (err, resp, body) => {
 
-            let firstVideo = unescape(body).match(/watch\?v=(.*?)+"/)[0];
-            let codeVideo = firstVideo.match(/watch\?v=(.*?)\"/)[1];
+            let codeVideo = "";
+
+            if (originType == SongType.SPOTIFY)  {
+                let firstVideo = unescape(body).match(/watch\?v=(.*?)+"/)[0];
+                codeVideo = firstVideo.match(/watch\?v=(.*?)\"/)[1];
+            }
+            else {
+                codeVideo = metadata.ytid;
+            }
+
             let urlYt = 'http://www.youtube.com/watch?v=' + codeVideo;
 
             ytdl.getInfo(urlYt, [], (err: any, info: any) => {
@@ -165,7 +173,7 @@ export class SongController {
                     cover: (metadata.cover) ? metadata.cover : "https://i.ytimg.com/vi/" + codeVideo + "/maxresdefault.jpg"
                 };
 
-                if (originType == SongType.SPOTIFY) 
+                if (originType == SongType.SPOTIFY)
                     res.locals.forId = metadata.forId;
 
 
@@ -273,7 +281,7 @@ export class SongController {
                 if (artistList.length > 0) {
                     keyword += " " + artistList[0].name;
                 }
-                
+
                 keyword = keyword.replace(/\s+/g, '+');
 
                 const flat_artist = artistList
@@ -399,4 +407,7 @@ export class SongController {
                 })
         });
     }
+
+
+
 }
