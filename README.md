@@ -1,4 +1,4 @@
-# webify
+# Webify
 JS / React Project 
 
 # What is it?
