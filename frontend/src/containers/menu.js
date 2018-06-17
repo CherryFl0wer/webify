@@ -2,12 +2,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { createPlaylist, getPlaylists, switchPlaylist } from '../actions/playlists';
 import { displayAddingPlaylist, userLogout, getAllSongsOfUser } from '../actions/app';
-import history from '../lib/history';
-import { Route, Link, withRouter } from "react-router-dom";
 
 import * as FontAwesome from 'react-fontawesome';
 import {
-    Form, FormGroup, Label, Input, FormText, Button, InputGroup, InputGroupAddon
+    Form, FormGroup, Input, Button, InputGroup, InputGroupAddon
 } from 'reactstrap';
 
 import '../assets/css/index.css';
@@ -16,6 +14,7 @@ class Menu extends React.Component {
 
     constructor(props) {
         super(props);
+        this._title = null;
     }
 
     componentWillMount() {
@@ -25,8 +24,7 @@ class Menu extends React.Component {
 
 
     render() {
-        let title = null;
-
+    
         const isAdding = this.props.app.adding_playlist ? (
             <div>
                 <li className="input-playlist">
@@ -35,9 +33,9 @@ class Menu extends React.Component {
 
                             <InputGroup>
                                 <Input type="text" name="playlistname" placeholder="playlist name"
-                                    onChange={(e) => title = e.target.value} />
+                                    onChange={(e) => this._title = e.target.value} />
                                 <InputGroupAddon addonType="append">
-                                    <Button onClick={() => this.props.create(title)}>+</Button>
+                                    <Button onClick={() => this.props.create(this._title)}>+</Button>
                                 </InputGroupAddon>
 
                             </InputGroup>

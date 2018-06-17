@@ -5,7 +5,7 @@ import {
     Form, FormGroup, Label, FormText, Input
 } from 'reactstrap';
 import FontAwesome from 'react-fontawesome';
-import { getAllSongsOfUser, deleteSong, toggleModalAddPlaylist } from '../actions/app';
+import { getAllSongsOfUser, deleteSong, toggleModalAddPlaylist, getUserSongList } from '../actions/app';
 import { addSongInPlaylist, removePlaylist, removeSongInPlaylist } from '../actions/playlists';
 import { addToQueue, playMusic, pauseMusic } from '../actions/player';
 import AddBtn from './addbtn';
@@ -22,18 +22,18 @@ class ListOf extends React.Component {
         this.item = null;
 
 
-        this.props.getAllSong(this.props.app.user.song_list)
+        this.props.getAllSong()
 
         this.interv = setInterval(() => {
             if (this.props.app.currentPlaylist == "library")
-                this.props.getAllSong(this.props.app.user.song_list)
+                this.props.getAllSong()
             else {
                 let idx = this.props.app.playlists.findIndex(e => e.title == this.props.app.currentPlaylist);
                 if (idx != -1)
-                    this.props.getAllSong(this.props.app.playlists[idx].songs);
+                    this.props.getAllPlaylistSong(this.props.app.playlists[idx].songs);
             }
 
-        }, 1000);
+        }, 2000);
     }
     componentWillUnmount() {
         clearInterval(this.interv);
@@ -140,6 +140,10 @@ class ListOf extends React.Component {
                             this.props.app.queueSong.map((item, idx) => {
                                 let min = parseInt(item.duration_sec / 60);
                                 let sec = parseInt(item.duration_sec % 60);
+                                let nsec = sec.toString()
+                                if (sec < 10) {
+                                    nsec = "0" + nsec;
+                                }
                                 return (
                                     <tr key={idx}>
                                         <th scope="row" onClick={() => this.switchPlayer(idx)}>
@@ -147,7 +151,7 @@ class ListOf extends React.Component {
                                         </th>
                                         <td>{item.name.substr(0, 25)}</td>
                                         <td>{item.artists}</td>
-                                        <td>{min} : {sec}</td>
+                                        <td>{min} : {nsec}</td>
                                         <td>{item.added_at}</td>
                                         <td>{item.type}</td>
 
@@ -192,7 +196,12 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
 
-    getAllSong: (listsongs) => {
+    getAllSong: () => {
+        dispatch(getUserSongList());
+    },
+
+    getAllPlaylistSong: (listsongs) => {
+
         dispatch(getAllSongsOfUser(listsongs));
     },
 
@@ -223,13 +232,11 @@ const mapDispatchToProps = (dispatch) => ({
     },
 
     removeSongInPlaylist: (title, idsong, listsongs) => {
-        dispatch(removeSongInPlaylist(title, idsong)).then(() => {
-            
-        });
+        dispatch(removeSongInPlaylist(title, idsong));
     },
 
     deleteSong: (id, idx) => {
-        dispatch(deleteSong(id, idx))
+        dispatch(deleteSong(id, idx));
     }
 });
 

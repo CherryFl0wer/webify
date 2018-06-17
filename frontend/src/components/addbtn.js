@@ -108,6 +108,7 @@ const mapDispatchToProps = (dispatch) => ({
         imagecover = null;
             
         dispatch(uploadSong(form, data));
+        dispatch(toggleModalTwo())
     }
 });
 

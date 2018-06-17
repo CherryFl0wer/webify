@@ -50,7 +50,11 @@ export default function player(state = identity, action) {
                 nplayer.metadata.duration_sec = nplayer.metadata.duration_ms / 1000;
                 let min = parseInt(nplayer.metadata.duration_sec / 60);
                 let sec = parseInt(nplayer.metadata.duration_sec % 60);
-                nplayer.finish = min.toString() + " : " + sec.toString();
+                let nsec = sec.toString()
+                if (sec < 10)
+                    nsec = "0" + nsec;
+
+                nplayer.finish = min.toString() + " : " + nsec;
 
                 nplayer.urlSong = url;
             }

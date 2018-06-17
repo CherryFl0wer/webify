@@ -52,7 +52,7 @@ class Player extends React.Component {
             }
 
             this._currentTime = this._audio.currentTime;
-         //   this._ntime = -1; // reset selected click on slider
+            this._ntime = -1; // reset selected click on slider
             let sec = Math.round(this._currentTime);
             let min = Math.floor(sec / 60);
             let nsec = sec % 60;
@@ -68,6 +68,7 @@ class Player extends React.Component {
             if (this._currentTimePercentage < 100) {
                 this._currentTimingSpan.innerHTML = min.toString() + ":" + nsec;
             }
+
             if (this._currentTimePercentage >= 100 || this._audio.currentTime.ended) {
                 this.playNextSongQueue();
             }
@@ -83,7 +84,7 @@ class Player extends React.Component {
 
     shouldComponentUpdate(nextProps) {
         const differentSong = (this.props.player.curIdxInQueue !== nextProps.player.curIdxInQueue)
-            || (this.props.player.curIdxInQueue == 0 && nextProps.player.curIdxInQueue == 0);
+            || ((this.props.player.curIdxInQueue == 0 && nextProps.player.curIdxInQueue == 0) && this.props.app.queueSong.length > 1);
         const hasSwitchedState = (this.props.player.playing != nextProps.player.playing)
             && (this.props.player.curIdxInQueue == nextProps.player.curIdxInQueue);
 
@@ -107,7 +108,7 @@ class Player extends React.Component {
 
         this._timerPercentage.stepDown(100);
 
-        if (this.props.player.curIdxInQueue + 1 >= this.props.app.queueSong.length)
+        if (this.props.player.curIdxInQueue + 1 >= this.props.app.queueSong.length) // or modulo
             this.props.play(0, this.props.app.queueSong);
         else
             this.props.play(this.props.player.curIdxInQueue + 1, this.props.app.queueSong);
@@ -133,6 +134,10 @@ class Player extends React.Component {
             return <FontAwesome name="play" />
         };
 
+        const displayFinish = () => {
+            return this.props.player.finish
+        }
+
         return (
             <div>
                 <audio ref={(audio) => this._audio = audio}>
@@ -150,6 +155,7 @@ class Player extends React.Component {
                         </div>
                         <div className="col-md-1 action">
                             <span ref={(span) => this._currentTimingSpan = span} className="currentTiming">
+                                0:00
                             </span>
                         </div>
                         <div className="col-md-9 action">
@@ -161,8 +167,7 @@ class Player extends React.Component {
 
                         </div>
                         <div className="col-md-1 action">
-                            <p>
-                                {this.props.player.finish}
+                            <p> {displayFinish()}
                             </p>
                         </div>
                     </div>

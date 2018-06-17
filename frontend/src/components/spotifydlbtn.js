@@ -1,11 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import {
-    Button, Modal, ModalHeader, ModalBody, ModalFooter,
-    Form, FormGroup, Label, Input, FormText
-} from 'reactstrap';
+import { Button } from 'reactstrap';
 
-import FontAwesome from 'react-fontawesome';
 import { dlSpotifySong, getUserSongList } from '../actions/app';
 import '../assets/css/index.css';
 
@@ -14,7 +10,7 @@ const SpotifyDlBtn = (props) => {
     if (!props.app.downloadedSpotifySong) {
         return (
             <div>
-                <Button outline color="success" size="lg" onClick={() => props.dl50(props.app.user.access_token)}>Spotify last 50</Button>
+                <Button outline color="success" size="lg" onClick={() => props.dl50(props.app.user.access_token)}>Spotify last 50 songs</Button>
             </div>
         );
     } 
@@ -29,8 +25,6 @@ const mapStateToProps = (state, ownProps) => ({
 const mapDispatchToProps = (dispatch) => ({
     dl50: (at) => {
         dispatch(dlSpotifySong(at));
-        clearInterval(songlist);
-        songlist = setInterval(() => dispatch(getUserSongList()), 5000);
     }
 });
 
