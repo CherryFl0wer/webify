@@ -4,6 +4,7 @@ JS / React Project
 # What is it?
 
 Webify is a Spotify-like, user can listen to music, create playlist and download their favorite songs.
+The goal of this project was to learn how to use React JS / Redux
 
 # How to install
 
